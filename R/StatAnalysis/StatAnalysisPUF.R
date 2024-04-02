@@ -35,7 +35,7 @@ significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] 
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/AVL_S_TukeyResults.csv")
+write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/AVL_S_TukeyResults.csv")
 
 # (2) Perform Anova for AVL_NS --------------------------------------------
 # Ensure 'Time' is a factor for ANOVA
@@ -53,7 +53,7 @@ significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] 
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/AVL_NS_TukeyResults.csv")
+write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/AVL_NS_TukeyResults.csv")
 
 # (3) Perform Anova for NBH_NS --------------------------------------------
 # Ensure 'Time' is a factor for ANOVA
@@ -71,7 +71,7 @@ significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] 
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/NBH_NS_TukeyResults.csv")
+write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/NBH_NS_TukeyResults.csv")
 
 # (4) Perform Anova for AVL_S and AVL_NS, only treatment ------------------
 # (4.1) Analyze control
@@ -105,7 +105,7 @@ significant_results <- tukey_result$`Time:ID`[tukey_result$`Time:ID`[, 4] < 0.05
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/AVL_Control_TukeyResults.csv")
+write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/AVL_Control_TukeyResults.csv")
 
 # (4.2) Analyze treatment
 # Filter rows from AVL_S and AVL_SN where Group is "Treatment"
@@ -138,4 +138,4 @@ significant_results <- tukey_result$`Time:ID`[tukey_result$`Time:ID`[, 4] < 0.05
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/AVL_Treatment_TukeyResults.csv")
+write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/AVL_Treatment_TukeyResults.csv")
