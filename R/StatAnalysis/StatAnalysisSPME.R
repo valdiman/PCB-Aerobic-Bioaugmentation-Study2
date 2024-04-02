@@ -1,5 +1,6 @@
 # Script to analysis PUF data using ANOVA and Tukey's Honest test
 # for lab data from bioaugmentation experiments
+# Needs to change tPCB, LCPCB, PCB_4, PCB_19
 
 # Install Packages
 install.packages("stats")
@@ -24,43 +25,53 @@ NBH_NS <- subset(PCB_data, ID == "NBH_NS")
 AVL_S$Time <- as.factor(AVL_S$Time)
 
 # Perform ANOVA
-anova_result <- aov(tPCB ~ Time*Group, data = AVL_S)
+anova_result <- aov(PCB_4 ~ Time*Group, data = AVL_S)
 summary(anova_result)
 
 # Perform Tukey's Honest Significant Difference test
-tukey_result <- TukeyHSD(anova_result, "Time:Group")
+tukey_result <- TukeyHSD(anova_result, "Time:Group") # No difference found for tPCB!
 
+# Access the relevant element of Tukey's HSD result
+tukey_result_group <- tukey_result$"Time:Group"
+# Remove rows with NA values
+tukey_result_clean <- tukey_result_group[complete.cases(tukey_result_group), ]
 # Subset to include only significant results
-significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] < 0.05, ]
+significant_results <- tukey_result_clean[tukey_result_clean[, 4] < 0.05, ]
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/AVL_S_TukeyResults.csv")
+write.csv(significant_results,
+          file = "Output/Data/StatAnalysis/SPME/AVL_S_TukeyResultsPCB4.csv")
 
 # (2) Perform Anova for AVL_NS --------------------------------------------
 # Ensure 'Time' is a factor for ANOVA
 AVL_NS$Time <- as.factor(AVL_NS$Time)
 
 # Perform ANOVA
-anova_result <- aov(tPCB ~ Time*Group, data = AVL_NS)
-summary(anova_result)
+anova_result <- aov(PCB_4 ~ Time*Group, data = AVL_NS)
+summary(anova_result) # No difference found for tPCB!
 
 # Perform Tukey's Honest Significant Difference test
-tukey_result <- TukeyHSD(anova_result, "Time:Group")
+tukey_result <- TukeyHSD(anova_result, "Time:Group") # No difference found for tPCB!
 
+# Access the relevant element of Tukey's HSD result
+tukey_result_group <- tukey_result$"Time:Group"
+# Remove rows with NA values
+tukey_result_clean <- tukey_result_group[complete.cases(tukey_result_group), ]
 # Subset to include only significant results
-significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] < 0.05, ]
+significant_results <- tukey_result_clean[tukey_result_clean[, 4] < 0.05, ]
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/AVL_NS_TukeyResults.csv")
+write.csv(significant_results,
+          file = "Output/Data/StatAnalysis/SPME/AVL_NS_TukeyResultsPCB4.csv")
 
 # (3) Perform Anova for NBH_NS --------------------------------------------
 # Ensure 'Time' is a factor for ANOVA
 NBH_NS$Time <- as.factor(NBH_NS$Time)
 
 # Perform ANOVA
-anova_result <- aov(tPCB ~ Time*Group, data = NBH_NS)
+anova_result <- aov(PCB_4 ~ Time*Group, data = NBH_NS)
 summary(anova_result)
 
 # Perform Tukey's Honest Significant Difference test
@@ -71,7 +82,7 @@ significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] 
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/NBH_NS_TukeyResults.csv")
+write.csv(significant_results, file = "Output/Data/StatAnalysis/SPME/NBH_NS_TukeyResultstPCB.csv")
 
 # (4) Perform Anova for AVL_S and AVL_NS, only treatment ------------------
 # (4.1) Analyze control
@@ -98,14 +109,13 @@ summary(anova_result)
 
 # Perform Tukey's Honest Significant Difference test
 tukey_result <- TukeyHSD(anova_result, "Time:ID")
-summary(tukey_result)
 
 # Subset to include only significant results
 significant_results <- tukey_result$`Time:ID`[tukey_result$`Time:ID`[, 4] < 0.05, ]
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/AVL_Control_TukeyResults.csv")
+write.csv(significant_results, file = "Output/Data/StatAnalysis/SPME/AVL_Control_TukeyResultstPCB.csv")
 
 # (4.2) Analyze treatment
 # Filter rows from AVL_S and AVL_SN where Group is "Treatment"
@@ -125,17 +135,7 @@ AVL <- rbind(filtered_AVL_S, filtered_AVL_NS)
 AVL$Time <- as.factor(AVL$Time)
 AVL$Group <- factor(AVL$Group)
 
-# Perform ANOVA
-anova_result <- aov(tPCB ~ Time*ID, data = AVL)
-summary(anova_result)
+# Perform t.test
+ttest_result <- t.test(tPCB ~ ID, data = AVL)
+print(ttest_result) # No difference found!
 
-# Perform Tukey's Honest Significant Difference test
-tukey_result <- TukeyHSD(anova_result, "Time:Group")
-summary(tukey_result)
-
-# Subset to include only significant results
-significant_results <- tukey_result$`Time:ID`[tukey_result$`Time:ID`[, 4] < 0.05, ]
-print(significant_results)
-
-# Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/AVL_Treatment_TukeyResults.csv")

@@ -1,5 +1,6 @@
 # Script to analysis PUF data using ANOVA and Tukey's Honest test
 # for lab data from bioaugmentation experiments
+# Needs to change tPCB, LCPCB, PCB_4, PCB_19
 
 # Install Packages
 install.packages("stats")
@@ -35,7 +36,8 @@ significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] 
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/AVL_S_TukeyResults.csv")
+write.csv(significant_results,
+          file = "Output/Data/StatAnalysis/PUF/AVL_S_TukeyResultstPCB.csv")
 
 # (2) Perform Anova for AVL_NS --------------------------------------------
 # Ensure 'Time' is a factor for ANOVA
@@ -53,7 +55,8 @@ significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] 
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/AVL_NS_TukeyResults.csv")
+write.csv(significant_results,
+          file = "Output/Data/StatAnalysis/PUF/AVL_NS_TukeyResultstPCB.csv")
 
 # (3) Perform Anova for NBH_NS --------------------------------------------
 # Ensure 'Time' is a factor for ANOVA
@@ -71,7 +74,8 @@ significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] 
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/NBH_NS_TukeyResults.csv")
+write.csv(significant_results,
+          file = "Output/Data/StatAnalysis/PUF/NBH_NS_TukeyResultstPCB.csv")
 
 # (4) Perform Anova for AVL_S and AVL_NS, only treatment ------------------
 # (4.1) Analyze control
@@ -105,7 +109,8 @@ significant_results <- tukey_result$`Time:ID`[tukey_result$`Time:ID`[, 4] < 0.05
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/AVL_Control_TukeyResults.csv")
+write.csv(significant_results,
+          file = "Output/Data/StatAnalysis/PUF/AVL_Control_TukeyResultstPCB.csv")
 
 # (4.2) Analyze treatment
 # Filter rows from AVL_S and AVL_SN where Group is "Treatment"
@@ -138,4 +143,5 @@ significant_results <- tukey_result$`Time:ID`[tukey_result$`Time:ID`[, 4] < 0.05
 print(significant_results)
 
 # Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/PUF/AVL_Treatment_TukeyResults.csv")
+write.csv(significant_results,
+          file = "Output/Data/StatAnalysis/PUF/AVL_Treatment_TukeyResultstPCB.csv")
