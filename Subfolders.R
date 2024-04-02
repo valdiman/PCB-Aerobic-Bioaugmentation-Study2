@@ -1,0 +1,13 @@
+# Create subfolder within the current working directory
+
+dir.create("Data")
+dir.create("R")
+dir.create("R/StatAnalysis")
+dir.create("R/TransportModel")
+dir.create("Output")
+dir.create("Output/Data")
+dir.create("Output/Data/TransportModel")
+dir.create("Output/Data/StatAnalysis")
+dir.create("Output/Plots")
+dir.create("Output/Plots/TransportModel")
+dir.create("Output/Plots/StatAnalysis")
