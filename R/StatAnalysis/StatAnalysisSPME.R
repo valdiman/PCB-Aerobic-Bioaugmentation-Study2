@@ -1,141 +1,112 @@
-# Script to analysis PUF data using ANOVA and Tukey's Honest test
+# Script to analysis SPME data using ANOVA and Tukey's Honest test
 # for lab data from bioaugmentation experiments
-# Needs to change tPCB, LCPCB, PCB_4, PCB_19
 
 # Install Packages
-install.packages("stats")
+install.packages("lattice")
 
 # Load Libraries
-library(stats)
+library(lattice)
 
 # Read PUF data -----------------------------------------------------------
 PCB_data <- read.csv("Data/SPME_data_long.csv")
 
-# Display the new dataset
+# See data
 print(PCB_data)
 
-# Prepare data for analysis -----------------------------------------------
-# Subset the data per ID
-AVL_S <- subset(PCB_data, ID == "AVL_S")
-AVL_NS <- subset(PCB_data, ID == "AVL_NS")
-NBH_NS <- subset(PCB_data, ID == "NBH_NS")
+# tPCB --------------------------------------------------------------------
+# Plot data
+xyplot(tPCB ~ factor(Time)|ID, group = Group,
+       data = PCB_data, auto.key = TRUE)
 
-# (1) Perform Anova for AVL_S ---------------------------------------------
-# Ensure 'Time' is a factor for ANOVA
-AVL_S$Time <- as.factor(AVL_S$Time)
+xyplot(log10(tPCB) ~ factor(Time)|ID, group = Group,
+       data = PCB_data, auto.key = TRUE)
 
-# Perform ANOVA
-anova_result <- aov(PCB_4 ~ Time*Group, data = AVL_S)
-summary(anova_result)
+# Stat Analysis (t test) --------------------------------------------------
+# two-sample t test
+# (1) AVL_S
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 3 & ID == "AVL_S"))
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 11 & ID == "AVL_S"))
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 35 & ID == "AVL_S"))
+# (2) AVL_NS
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 16 & ID == "AVL_NS"))
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 35 & ID == "AVL_NS"))
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 75 & ID == "AVL_NS"))
+# (3) NBH_NS
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 16 & ID == "NBH_NS"))
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 35 & ID == "NBH_NS"))
+t.test(log10(tPCB) ~ Group, data = subset(PCB_data, Time == 75 & ID == "NBH_NS"))
+# (4) AVL_S vs. AVL_NS
+# Time 16 days
+tmp.data = subset(PCB_data, Time == 16 & (ID == "AVL_S" | ID == "AVL_NS"))
+# Plot data
+xyplot(tPCB ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
+xyplot(log10(tPCB) ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
 
-# Perform Tukey's Honest Significant Difference test
-tukey_result <- TukeyHSD(anova_result, "Time:Group") # No difference found for tPCB!
+# two-sample t test
+t.test(log10(tPCB) ~ ID, data = subset(tmp.data, Group == "Control"))
 
-# Access the relevant element of Tukey's HSD result
-tukey_result_group <- tukey_result$"Time:Group"
-# Remove rows with NA values
-tukey_result_clean <- tukey_result_group[complete.cases(tukey_result_group), ]
-# Subset to include only significant results
-significant_results <- tukey_result_clean[tukey_result_clean[, 4] < 0.05, ]
-print(significant_results)
+# Time 35 days
+tmp.data = subset(PCB_data, Time == 35 & (ID == "AVL_S" | ID == "AVL_NS"))
+# Plot data
+xyplot(tPCB ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
+xyplot(log10(tPCB) ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
 
-# Export results (significant only)
-write.csv(significant_results,
-          file = "Output/Data/StatAnalysis/SPME/AVL_S_TukeyResultsPCB4.csv")
+# two-sample t test
+t.test(log10(tPCB) ~ ID, data = subset(tmp.data, Group == "Control"))
+t.test(log10(tPCB) ~ ID, data = subset(tmp.data, Group == "Treatment"))
 
-# (2) Perform Anova for AVL_NS --------------------------------------------
-# Ensure 'Time' is a factor for ANOVA
-AVL_NS$Time <- as.factor(AVL_NS$Time)
+# PCB 4 -------------------------------------------------------------------
+# Plot data
+xyplot(PCB_4 ~ factor(Time)|ID, group = Group,
+       data = PCB_data, auto.key = TRUE)
 
-# Perform ANOVA
-anova_result <- aov(PCB_4 ~ Time*Group, data = AVL_NS)
-summary(anova_result) # No difference found for tPCB!
+xyplot(log10(PCB_4) ~ factor(Time)|ID, group = Group,
+       data = PCB_data, auto.key = TRUE)
 
-# Perform Tukey's Honest Significant Difference test
-tukey_result <- TukeyHSD(anova_result, "Time:Group") # No difference found for tPCB!
+# Stat Analysis (t test) --------------------------------------------------
+# two-sample t test
+# (1) AVL_S
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 3 & ID == "AVL_S"))
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 11 & ID == "AVL_S"))
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 35 & ID == "AVL_S"))
+# (2) AVL_NS
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 16 & ID == "AVL_NS"))
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 35 & ID == "AVL_NS"))
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 75 & ID == "AVL_NS"))
+# (3) NBH_NS
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 16 & ID == "NBH_NS"))
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 35 & ID == "NBH_NS"))
+t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 75 & ID == "NBH_NS"))
 
-# Access the relevant element of Tukey's HSD result
-tukey_result_group <- tukey_result$"Time:Group"
-# Remove rows with NA values
-tukey_result_clean <- tukey_result_group[complete.cases(tukey_result_group), ]
-# Subset to include only significant results
-significant_results <- tukey_result_clean[tukey_result_clean[, 4] < 0.05, ]
-print(significant_results)
+# (4) AVL_S vs. AVL_NS
+# Time 16 days
+tmp.data = subset(PCB_data, Time == 16 & (ID == "AVL_S" | ID == "AVL_NS"))
+# Plot data
+xyplot(PCB_4 ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
+xyplot(log10(PCB_4) ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
 
-# Export results (significant only)
-write.csv(significant_results,
-          file = "Output/Data/StatAnalysis/SPME/AVL_NS_TukeyResultsPCB4.csv")
+# two-sample t test
+t.test(log10(PCB_4) ~ ID, data = subset(tmp.data, Group == "Control"))
 
-# (3) Perform Anova for NBH_NS --------------------------------------------
-# Ensure 'Time' is a factor for ANOVA
-NBH_NS$Time <- as.factor(NBH_NS$Time)
+# Time 35 days
+tmp.data = subset(PCB_data, Time == 35 & (ID == "AVL_S" | ID == "AVL_NS"))
+# Plot data
+xyplot(PCB_4 ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
+xyplot(log10(PCB_4) ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
 
-# Perform ANOVA
-anova_result <- aov(PCB_4 ~ Time*Group, data = NBH_NS)
-summary(anova_result)
+# two-sample t test
+t.test(log10(PCB_4) ~ ID, data = subset(tmp.data, Group == "Control"))
+t.test(log10(PCB_4) ~ ID, data = subset(tmp.data, Group == "Treatment"))
 
-# Perform Tukey's Honest Significant Difference test
-tukey_result <- TukeyHSD(anova_result, "Time:Group")
 
-# Subset to include only significant results
-significant_results <- tukey_result$`Time:Group`[tukey_result$`Time:Group`[, 4] < 0.05, ]
-print(significant_results)
 
-# Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/SPME/NBH_NS_TukeyResultstPCB.csv")
 
-# (4) Perform Anova for AVL_S and AVL_NS, only treatment ------------------
-# (4.1) Analyze control
-# Filter rows from AVL_S and AVL_SN where Group is "Control"
-control_AVL_S <- AVL_S[AVL_S$Group == "Control", ]
-control_AVL_NS <- AVL_NS[AVL_NS$Group == "Control", ]
-
-# Filter rows with matching Time values
-matching_times <- intersect(control_AVL_S$Time, control_AVL_NS$Time)
-
-# Filter rows with matching Time values from AVL_S and AVL_SN
-filtered_AVL_S <- control_AVL_S[control_AVL_S$Time %in% matching_times, ]
-filtered_AVL_NS <- control_AVL_NS[control_AVL_NS$Time %in% matching_times, ]
-
-# Concatenate the filtered data frames
-AVL <- rbind(filtered_AVL_S, filtered_AVL_NS)
-
-AVL$Time <- as.factor(AVL$Time)
-AVL$Group <- factor(AVL$Group)
-
-# Perform ANOVA
-anova_result <- aov(tPCB ~ Time*ID, data = AVL)
-summary(anova_result)
-
-# Perform Tukey's Honest Significant Difference test
-tukey_result <- TukeyHSD(anova_result, "Time:ID")
-
-# Subset to include only significant results
-significant_results <- tukey_result$`Time:ID`[tukey_result$`Time:ID`[, 4] < 0.05, ]
-print(significant_results)
-
-# Export results (significant only)
-write.csv(significant_results, file = "Output/Data/StatAnalysis/SPME/AVL_Control_TukeyResultstPCB.csv")
-
-# (4.2) Analyze treatment
-# Filter rows from AVL_S and AVL_SN where Group is "Treatment"
-treatment_AVL_S <- AVL_S[AVL_S$Group == "Treatment", ]
-treatment_AVL_NS <- AVL_NS[AVL_NS$Group == "Treatment", ]
-
-# Filter rows with matching Time values
-matching_times <- intersect(treatment_AVL_S$Time, treatment_AVL_NS$Time)
-
-# Filter rows with matching Time values from AVL_S and AVL_SN
-filtered_AVL_S <- treatment_AVL_S[treatment_AVL_S$Time %in% matching_times, ]
-filtered_AVL_NS <- treatment_AVL_NS[treatment_AVL_NS$Time %in% matching_times, ]
-
-# Concatenate the filtered data frames
-AVL <- rbind(filtered_AVL_S, filtered_AVL_NS)
-
-AVL$Time <- as.factor(AVL$Time)
-AVL$Group <- factor(AVL$Group)
-
-# Perform t.test
-ttest_result <- t.test(tPCB ~ ID, data = AVL)
-print(ttest_result) # No difference found!
 
