@@ -1,6 +1,5 @@
 # Script to analysis PUF data using ANOVA and Tukey's Honest test
 # for lab data from bioaugmentation experiments
-# Needs to change tPCB, LCPCB, PCB_4, PCB_19
 
 # Install Packages
 install.packages("lattice")
@@ -86,9 +85,30 @@ t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 16 & ID == "NBH_NS"
 t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 35 & ID == "NBH_NS"))
 t.test(log10(PCB_4) ~ Group, data = subset(PCB_data, Time == 75 & ID == "NBH_NS"))
 
+# (4) AVL_S vs. AVL_NS
+# Time 16 days
+tmp.data = subset(PCB_data, Time == 16 & (ID == "AVL_S" | ID == "AVL_NS"))
+# Plot data
+xyplot(PCB_4 ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
+xyplot(log10(PCB_4) ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
 
+# two-sample t test
+t.test(log10(PCB_4) ~ ID, data = subset(tmp.data, Group == "Control"))
+t.test(log10(PCB_4) ~ ID, data = subset(tmp.data, Group == "Treatment"))
 
+# Time 35 days
+tmp.data = subset(PCB_data, Time == 35 & (ID == "AVL_S" | ID == "AVL_NS"))
+# Plot data
+xyplot(PCB_4 ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
+xyplot(log10(PCB_4) ~ factor(Time)|ID, group = Group, data = tmp.data,
+       auto.key = TRUE)
 
+# two-sample t test
+t.test(log10(PCB_4) ~ ID, data = subset(tmp.data, Group == "Control"))
+t.test(log10(PCB_4) ~ ID, data = subset(tmp.data, Group == "Treatment"))
 
 
 
