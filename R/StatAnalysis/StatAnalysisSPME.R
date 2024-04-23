@@ -13,7 +13,6 @@ PCB_data <- read.csv("Data/SPME_data_long.csv")
 # See data
 print(PCB_data)
 
-
 # tPCB --------------------------------------------------------------------
 # Plot data
 xyplot(tPCB ~ factor(Time)|ID, group = Group,
