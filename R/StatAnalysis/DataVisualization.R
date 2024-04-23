@@ -28,7 +28,7 @@ Vf <- 0.000000069 # L/cm SPME
 
 # Calibration data --------------------------------------------------------
 # Select individual congeners from datasets
-pcbi <- "PCB118"
+pcbi <- "PCB4"
 
 # Extract relevant columns from each dataset
 {
