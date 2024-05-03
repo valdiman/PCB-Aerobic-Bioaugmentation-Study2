@@ -112,27 +112,27 @@ t.test(log10(PCB_4) ~ ID, data = subset(tmp.data, Group == "Treatment"))
 
 # PCB 19 -------------------------------------------------------------------
 # Plot data
-xyplot(PCB_19 ~ factor(Time)|ID, group = Group,
+xyplot(PCB_52 ~ factor(Time)|ID, group = Group,
        data = PCB_data, auto.key = TRUE)
 
-xyplot(log10(PCB_19) ~ factor(Time)|ID, group = Group,
+xyplot(log10(PCB_52) ~ factor(Time)|ID, group = Group,
        data = PCB_data, auto.key = TRUE)
 
 # Stat Analysis (t test) --------------------------------------------------
 # two-sample t test
 # (1) AVL_S
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 3 & ID == "AVL_S"))
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 11 & ID == "AVL_S"))
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 16 & ID == "AVL_S"))
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 35 & ID == "AVL_S"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 3 & ID == "AVL_S"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 11 & ID == "AVL_S"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 16 & ID == "AVL_S"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 35 & ID == "AVL_S"))
 # (2) AVL_NS
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 16 & ID == "AVL_NS"))
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 35 & ID == "AVL_NS"))
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 75 & ID == "AVL_NS"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 16 & ID == "AVL_NS"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 35 & ID == "AVL_NS"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 75 & ID == "AVL_NS"))
 # (3) NBH_NS
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 16 & ID == "NBH_NS"))
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 35 & ID == "NBH_NS"))
-t.test(log10(PCB_19) ~ Group, data = subset(PCB_data, Time == 75 & ID == "NBH_NS"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 16 & ID == "NBH_NS"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 35 & ID == "NBH_NS"))
+t.test(log10(PCB_52) ~ Group, data = subset(PCB_data, Time == 75 & ID == "NBH_NS"))
 
 # (4) AVL_S vs. AVL_NS
 # Time 16 days
