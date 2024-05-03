@@ -160,10 +160,3 @@ t.test(log10(PCB_19) ~ ID, data = subset(tmp.data, Group == "Control"))
 t.test(log10(PCB_19) ~ ID, data = subset(tmp.data, Group == "Treatment"))
 
 
-
-
-
-
-
-
-
