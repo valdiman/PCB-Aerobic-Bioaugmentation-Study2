@@ -76,7 +76,7 @@ pcb.cali.plot <- ggplot(pcb.cali, aes(x = time, y = get(pcbi),
 print(pcb.cali.plot)
 
 # Save plot in folder
-ggsave("Output/Plots/PCB4Calibration.png",
+ggsave("Output/Plots/General/PCB4Calibration.png",
        plot = pcb.cali.plot, width = 10, height = 5, dpi = 500)
 
 # Plot with no replicate r.3
@@ -154,11 +154,11 @@ pcbi.plot <- ggplot(pcb.i, aes(x = time, y = !!as.name(pcbi)/length,
 print(pcbi.plot)
 
 # Save plot in folder
-ggsave("Output/Plots/PCB4.png",
+ggsave("Output/Plots/General/PCB4.png",
        plot = pcbi.plot, width = 10, height = 5, dpi = 500)
 
 # Read data ---------------------------------------------------------------
-exp.data <- read.csv("Data/PCBDataV02.csv")
+exp.data <- read.csv("Data/General/PCBDataV02.csv")
 
 # Organize SPME data -----------------------------------------------------------
 # spme = SPME fiber sampler [ng/cm]
