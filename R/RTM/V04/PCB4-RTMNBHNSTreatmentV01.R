@@ -107,7 +107,7 @@ rtm.PCB4 = function(t, state, parms){
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  ro <- 0.0001 # m3/d sampling rate
+  ro <- 0.00011 # m3/d sampling rate
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
@@ -140,7 +140,7 @@ rtm.PCB4 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Biotransformation rate
-  kb <- 0.00 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  kb <- 0.0 # 1/d, value changes depending on experiment 0.023 from SPME calibration
   
   # derivatives dx/dt are computed below
   Cpw <- state[1]
@@ -161,14 +161,14 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 430  # ng/g PCB 4 sediment concentration
+Ct <- 314.263 * 1.2  # ng/g PCB 4 sediment concentration wet!
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 Cpw <- Ct / Kd * 1000 # [ng/L]
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-t.1 <- unique(pcb_combined_control$time)
+t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4)
 head(out.1)
