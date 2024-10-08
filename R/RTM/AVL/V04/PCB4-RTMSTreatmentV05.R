@@ -144,10 +144,10 @@ rtm.PCB4 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailabilty factor B
-  #B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
-  B <- 1
+  B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
+  
   # Biotransformation rate
-  kb <- 0 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  kb <- 0.5 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
   
   # Sortion and desorption constants
   ka <- parms$ka #1/d
@@ -170,7 +170,7 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 630.2023 * 5  # ng/g PCB 4 sediment concentration
+Ct <- 630.2023 * 1  # ng/g PCB 4 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
@@ -179,7 +179,7 @@ ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ka = 2.8, kd = 0.015) # Input 
+parms <- list(ka = 7, kd = 0.015) # Input 
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
