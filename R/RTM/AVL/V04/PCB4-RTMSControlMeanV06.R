@@ -147,7 +147,7 @@ rtm.PCB4 = function(t, state, parms){
   B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
   
   # Biotransformation rate
-  kb <- 0.1 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  kb <- 0.03 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
   
   # Sortion and desorption constants
   ka <- parms$ka #1/d
@@ -179,7 +179,7 @@ ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ka = 3, kd = 0.015) # Input 
+parms <- list(ka = 7, kd = 0.015) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
@@ -244,7 +244,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB4SControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB4SControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
