@@ -116,7 +116,7 @@ rtm.PCB4 = function(t, state, parms){
   Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
-  ko <- 100 # cm/d PCB 4 mass transfer coefficient to SPME
+  ko <- 1000 # cm/d PCB 4 mass transfer coefficient to SPME
   
   # Sediment partitioning
   M <- 0.1 # kg/L solid-water ratio
@@ -147,11 +147,12 @@ rtm.PCB4 = function(t, state, parms){
   B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
   
   # Biotransformation rate
-  kb <- 0.5 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  #kb <- 0.6 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
   
   # Sortion and desorption constants
   ka <- parms$ka #1/d
   kd <- parms$kd #1/d
+  kb <- parms$kb
   
   # derivatives dx/dt are computed below
   Cw <- state[1]
@@ -170,7 +171,7 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 630.2023 * 1  # ng/g PCB 4 sediment concentration
+Ct <- 630.2023 * 0.7  # ng/g PCB 4 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
@@ -179,7 +180,7 @@ ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ka = 7, kd = 0.015) # Input 
+parms <- list(ka = 7, kd = 0.015, kb = 5) # Input 
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
