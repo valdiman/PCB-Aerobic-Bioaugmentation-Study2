@@ -109,7 +109,7 @@ rtm.PCB19 = function(t, state, parms){
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  ro <- 0.00025 # m3/d sampling rate
+  ro <- 0.0002 # m3/d sampling rate
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
@@ -147,7 +147,7 @@ rtm.PCB19 = function(t, state, parms){
   B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
   
   # Biotransformation rate
-  kb <- 1 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  kb <- 0
   
   # Sortion and desorption constants
   ka <- parms$ka #1/d
@@ -170,7 +170,7 @@ rtm.PCB19 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 259.8342356 * 5# ng/g PCB 19 sediment concentration
+Ct <- 259.8342356 * 4.5# ng/g PCB 19 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
@@ -244,7 +244,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB19SControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB19AVLSTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -298,7 +298,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
 p.19 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/PCB19ALV_S_Treatment.png", plot = p.4, width = 15,
+ggsave("Output/Plots/RTM/PCB19ALV_S_Treatment.png", plot = p.19, width = 15,
        height = 5, dpi = 500)
 
 
