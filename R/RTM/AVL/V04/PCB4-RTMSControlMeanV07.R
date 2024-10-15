@@ -109,14 +109,13 @@ rtm.PCB4 = function(t, state, parms){
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  ro <- 0.00025 # m3/d sampling rate 0.004, 0.00025
+  
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
   Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
-  ko <- 0.1 # cm/d PCB 4 mass transfer coefficient to SPME
   
   # Sediment partitioning
   M <- 0.1 # kg/L solid-water ratio
@@ -132,7 +131,7 @@ rtm.PCB4 = function(t, state, parms){
   V.water.air <- 0.003 # m/s water's velocity of air-side mass transfer without ventilation (eq. 20-15)
   V.co2.w <- 4.1*10^-2 # m/s mass transfer coefficient of CO2 in water side without ventilation
   SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 4
-
+  
   # kaw calculations (air-water mass transfer coefficient)
   # i) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
@@ -143,7 +142,7 @@ rtm.PCB4 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Bioavailabilty factor B
+  # Bioavailability factor B
   B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
   
   # Sortion and desorption constants
@@ -157,7 +156,7 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[3]
   mpuf <- state[4]
   
-  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw)- kb * Cw) / B 
+  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) - kb * Cw) / B # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw)
   dpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -176,18 +175,16 @@ K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
-kb2 <- 2.8
-Cwi <- Cwi * exp(-kb2 * 1)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(kb = 0.05, ko = 500, ro = 0.00025) # Input 
+parms <- list(kb = 3, ko = 500, ro = 0.00025) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
 
 # Ensure observed data is in a tibble
-observed_data <- as_tibble(pcb_combined_treatment) %>%
-  select(time, mf_Treatment, mpuf_Treatment)
+observed_data <- as_tibble(pcb_combined_control) %>%
+  select(time, mf_Control, mpuf_Control)
 
 # Convert model results to tibble, ensuring 'time' is numeric and rename columns if needed
 model_results <- as_tibble(out.1) %>%
@@ -204,9 +201,9 @@ grouped_comparison <- comparison_data %>%
   group_by(time) %>%  # Adjust the grouping variable if needed
   summarise(
     avg_mf_model = mean(mf, na.rm = TRUE),
-    avg_mf_observed = mean(mf_Treatment, na.rm = TRUE),
+    avg_mf_observed = mean(mf_Control, na.rm = TRUE),
     avg_mpuf_model = mean(mpuf, na.rm = TRUE),
-    avg_mpuf_observed = mean(mpuf_Treatment, na.rm = TRUE)
+    avg_mpuf_observed = mean(mpuf_Control, na.rm = TRUE)
   )
 
 # Define function to calculate R-squared, handling NA values
@@ -244,7 +241,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB4STreatment.csv")
+# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB4SControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -255,12 +252,12 @@ model_data_long <- model_results_daily_clean %>%
 
 # Clean observed data and prepare for plotting
 observed_data_clean <- observed_data %>%
-  pivot_longer(cols = c(mf_Treatment, mpuf_Treatment), 
+  pivot_longer(cols = c(mf_Control, mpuf_Control), 
                names_to = "variable", 
                values_to = "observed_value") %>%
   mutate(variable = recode(variable, 
-                           "mf_Treatment" = "mf", 
-                           "mpuf_Treatment" = "mpuf"),
+                           "mf_Control" = "mf", 
+                           "mpuf_Control" = "mpuf"),
          type = "Observed")
 
 plot_data_daily <- bind_rows(
@@ -298,7 +295,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
 p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-# ggsave("Output/Plots/RTM/PCB4ALV_S_Treatment.png", plot = p.4, width = 15,
-#       height = 5, dpi = 500)
+ggsave("Output/Plots/RTM/PCB4ALV_S_Control.png", plot = p.4, width = 15,
+       height = 5, dpi = 500)
 
 
