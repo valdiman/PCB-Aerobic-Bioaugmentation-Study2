@@ -1,6 +1,6 @@
-# Code to model PCB 4 in laboratory experiments
+# Code to model PCB 19 in laboratory experiments
 # using sediment from Altavista, VI. Passive measurements
-# of PCB 4 in the water and the air phases are predicted and
+# of PCB 19 in the water and the air phases are predicted and
 # linked to the water and air concentrations from the passive
 # samplers.
 
@@ -33,7 +33,7 @@ install.packages("gridExtra")
   # Combine
   exp.data <- rbind(exp.data.PUF, exp.data.SPME)
   # Select individual congener from datasets
-  pcb.ind <- "PCB_4"
+  pcb.ind <- "PCB_19"
   # Extract relevant columns from each dataset
   pcbi <- exp.data[, c("ID", "Group", "time", "sampler", pcb.ind)]
 }
@@ -41,24 +41,24 @@ install.packages("gridExtra")
 # Organize data -----------------------------------------------------------
 {
   # Remove lost sample(s), NA
-  pcbi <- pcbi[!is.na(pcbi$PCB_4), ]
+  pcbi <- pcbi[!is.na(pcbi$PCB_19), ]
   # Pull congener-specific data from the dataset without averaging
   # Select SPME control samples
   pcbi.spme.control <- pcbi %>%
     filter(ID == "AVL_S", Group == "Control", sampler == "SPME") %>%
-    rename("mf_Control" = PCB_4)
+    rename("mf_Control" = PCB_19)
   # Select SPME treatment samples
   pcbi.spme.treatment <- pcbi %>%
     filter(ID == "AVL_S", Group == "Treatment", sampler == "SPME") %>%
-    rename("mf_Treatment" = PCB_4)
+    rename("mf_Treatment" = PCB_19)
   # Select PUF control samples
   pcbi.puf.control <- pcbi %>%
     filter(ID == "AVL_S", Group == "Control", sampler == "PUF") %>%
-    rename("mpuf_Control" = PCB_4)
+    rename("mpuf_Control" = PCB_19)
   # Select PUF treatment samples
   pcbi.puf.treatment <- pcbi %>%
     filter(ID == "AVL_S", Group == "Treatment", sampler == "PUF") %>%
-    rename("mpuf_Treatment" = PCB_4)
+    rename("mpuf_Treatment" = PCB_19)
   # Combine the mf and mpuf data for Control
   pcb_combined_control <- cbind(
     pcbi.spme.control %>%
@@ -86,12 +86,12 @@ install.packages("gridExtra")
 }
 
 # Reactive transport function ---------------------------------------------
-rtm.PCB4 = function(t, state, parms){
+rtm.PCB19 = function(t, state, parms){
   
   # Experimental conditions
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
-  MW.pcb <- 223.088 # g/mol PCB 4 molecular weight
+  MW.pcb <- 257.532 # g/mol PCB 19 molecular weight
   
   # Bioreactor parameters
   Vpw <- 25 #cm3 porewater volume 
@@ -101,21 +101,22 @@ rtm.PCB4 = function(t, state, parms){
   Aws <- 30 # cm2
   
   # Congener-specific constants
-  Kaw <- 0.01344142 # PCB 4 dimensionless Henry's law constant @ 25 C
-  Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
-  Koa <- 10^(6.521554861) # PCB 4 octanol-air equilibrium partition coefficient
+  Kaw <- 0.018048667 # PCB 19 dimensionless Henry's law constant @ 25 C
+  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
+  Koa <- 10^(6.763554861) # PCB 19 octanol-air equilibrium partition coefficient
   
   # PUF constants 
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  
+  ro <- 0.0002 # m3/d sampling rate
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
   Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
+  ko <- 10 # cm/d PCB 4 mass transfer coefficient to SPME
   
   # Sediment partitioning
   M <- 0.1 # kg/L solid-water ratio
@@ -131,7 +132,7 @@ rtm.PCB4 = function(t, state, parms){
   V.water.air <- 0.003 # m/s water's velocity of air-side mass transfer without ventilation (eq. 20-15)
   V.co2.w <- 4.1*10^-2 # m/s mass transfer coefficient of CO2 in water side without ventilation
   SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 4
-  
+
   # kaw calculations (air-water mass transfer coefficient)
   # i) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
@@ -167,24 +168,23 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 630.2023 * 5  # ng/g PCB 4 sediment concentration
+Ct <- 259.8342356 * 5 # ng/g PCB 19 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
+Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(kb = 3, ko = 100, ro = 0.00025) # Input 
+parms <- list(kb = 0, ko = 100, ro = 0.0002) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
-out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
+out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
 head(out.1)
 
 # Ensure observed data is in a tibble
-observed_data <- as_tibble(pcb_combined_control) %>%
-  select(time, mf_Control, mpuf_Control)
+observed_data <- as_tibble(pcb_combined_treatment) %>%
+  select(time, mf_Treatment, mpuf_Treatment)
 
 # Convert model results to tibble, ensuring 'time' is numeric and rename columns if needed
 model_results <- as_tibble(out.1) %>%
@@ -201,9 +201,9 @@ grouped_comparison <- comparison_data %>%
   group_by(time) %>%  # Adjust the grouping variable if needed
   summarise(
     avg_mf_model = mean(mf, na.rm = TRUE),
-    avg_mf_observed = mean(mf_Control, na.rm = TRUE),
+    avg_mf_observed = mean(mf_Treatment, na.rm = TRUE),
     avg_mpuf_model = mean(mpuf, na.rm = TRUE),
-    avg_mpuf_observed = mean(mpuf_Control, na.rm = TRUE)
+    avg_mpuf_observed = mean(mpuf_Treatment, na.rm = TRUE)
   )
 
 # Define function to calculate R-squared, handling NA values
@@ -231,7 +231,7 @@ print(paste("R-squared for mpuf (average): ", mpuf_r2_value))
 # Run the model with the new time sequence
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
 t_daily <- seq(0, 40, by = 1)  # Adjust according to your needs
-out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4, parms = parms)
+out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB19, parms = parms)
 
 # Convert model results to tibble and ensure numeric values
 model_results_daily_clean <- as_tibble(out_daily) %>%
@@ -241,7 +241,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB4SControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB19AVLSTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -252,12 +252,12 @@ model_data_long <- model_results_daily_clean %>%
 
 # Clean observed data and prepare for plotting
 observed_data_clean <- observed_data %>%
-  pivot_longer(cols = c(mf_Control, mpuf_Control), 
+  pivot_longer(cols = c(mf_Treatment, mpuf_Treatment), 
                names_to = "variable", 
                values_to = "observed_value") %>%
   mutate(variable = recode(variable, 
-                           "mf_Control" = "mf", 
-                           "mpuf_Control" = "mpuf"),
+                           "mf_Treatment" = "mf", 
+                           "mpuf_Treatment" = "mpuf"),
          type = "Observed")
 
 plot_data_daily <- bind_rows(
@@ -292,10 +292,10 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
   theme(legend.title = element_blank())
 
 # Arrange plots side by side
-p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
+p.19 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/PCB4ALV_S_Control.png", plot = p.4, width = 15,
+ggsave("Output/Plots/RTM/PCB19ALV_S_Treatment.png", plot = p.19, width = 15,
        height = 5, dpi = 500)
 
 
