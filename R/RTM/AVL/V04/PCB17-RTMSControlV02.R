@@ -164,7 +164,8 @@ rtm.PCB17 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-Ct <- 307.3052312 * 4  # ng/g PCB 17 sediment concentration
+cf <- 4
+Ct <- 307.3052312 * cf  # ng/g PCB 17 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation

@@ -166,15 +166,16 @@ rtm.PCB17 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-Ct <- 307.3052312 * 5  # ng/g PCB 17 sediment concentration
+cf <- 4
+Ct <- 307.3052312 * cf  # ng/g PCB 17 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
-kb2 <- 1
-Cwi <- Cwi * exp(-kb2 * 0.1)
+kb2 <- 1.5
+Cwi <- Cwi * exp(-kb2 * 1)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(kb = 3, ko = 10, ro = 0.00025) # Input 
 t.1 <- unique(pcb_combined_treatment$time)

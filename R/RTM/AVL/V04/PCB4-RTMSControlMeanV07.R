@@ -167,16 +167,16 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 630.2023 * 5  # ng/g PCB 4 sediment concentration
+cf <- 5 # concentration factor
+Ct <- 630.2023 * cf  # ng/g PCB 4 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(kb = 3, ko = 100, ro = 0.00025) # Input 
+parms <- list(kb = 5, ko = 80, ro = 0.00025) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
