@@ -109,14 +109,12 @@ rtm.PCB4 = function(t, state, parms){
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  ro <- 0.00025 # m3/d sampling rate 0.004, 0.00025
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
   Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
-  ko <- 0.1 # cm/d PCB 4 mass transfer coefficient to SPME
   
   # Sediment partitioning
   M <- 0.1 # kg/L solid-water ratio
@@ -143,13 +141,17 @@ rtm.PCB4 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Bioavailabilty factor B
+  # Bioavailability factor B
   B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
   
-  # Sortion and desorption constants
-  kb <- parms$kb # 1/d
-  ko <- parms$ko # cm/d
-  ro <- parms$ro # m3/d
+  # Passive sampler rates
+  ro <- parms$ro # m3/d sampling rate for PUF
+  ko <- parms$ko # cm/d mass transfer coefficient to SPME
+  
+  # Biotransformation, sortion and desorption rates
+  kb <- parms$kb
+  ka <- parms$ka #1/d
+  kd <- parms$kd #1/d
   
   # derivatives dx/dt are computed below
   Cw <- state[1]
@@ -157,7 +159,7 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[3]
   mpuf <- state[4]
   
-  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw)- kb * Cw) / B 
+  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) + kd * Cw * K * M - ka * Cw - kb * Cw) / B # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw)
   dpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -168,8 +170,7 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-cf <- 5
-Ct <- 630.2023 * cf  # ng/g PCB 4 sediment concentration
+Ct <- 630.2023 * 5  # ng/g PCB 4 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
@@ -177,16 +178,16 @@ K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
-kb2 <- 2.75
-Cwi <- Cwi * exp(-kb2 * 1) # reacts in 1 day?
+kb2 <- 0.2
+Cwi <- Cwi * exp(-kb2 * 12) # 3 days?
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(kb = 0.8, ko = 80, ro = 0.00025) # Input 
-t.1 <- unique(pcb_combined_control$time)
+parms <- list(ro = 0.00025, ko = 1, kb = 0.03, ka = 7, kd = 0.015) # Input 
+t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
 
-# Ensure observed data are in a tibble
+# Ensure observed data is in a tibble
 observed_data <- as_tibble(pcb_combined_treatment) %>%
   select(time, mf_Treatment, mpuf_Treatment)
 
@@ -245,7 +246,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB4STreatment.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4STreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -299,7 +300,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
 p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-# ggsave("Output/Plots/RTM/PCB4ALV_S_Treatment.png", plot = p.4, width = 15,
-#       height = 5, dpi = 500)
+ggsave("Output/Plots/RTM/S/AVL/PCB4ALV_S_Treatment.png", plot = p.4, width = 15,
+       height = 5, dpi = 500)
 
 
