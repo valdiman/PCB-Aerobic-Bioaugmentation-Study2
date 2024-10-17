@@ -146,10 +146,12 @@ rtm.PCB17 = function(t, state, parms){
   # Bioavailability factor B
   B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
   
-  # Biotransformation rate
-  kb <- 0.8 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  # Passive sampler rates
+  ro <- parms$ro # m3/d sampling rate for PUF
+  ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
-  # Sortion and desorption constants
+  # Biotransformation, sortion and desorption rates
+  kb <- parms$kb #1/d
   ka <- parms$ka #1/d
   kd <- parms$kd #1/d
   
@@ -169,15 +171,17 @@ rtm.PCB17 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-Ct <- 307.3052312 * 1  # ng/g PCB 17 sediment concentration
+Ct <- 307.3052312 * 4  # ng/g PCB 17 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
+kb2 <- 0.15
+Cwi <- Cwi * exp(-kb2 * 9) # n days?
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ka = 5, kd = 0.0015) # Input 
+parms <- list(ro = 0.00025, ko = 2.5, kb = 0.0, ka = 10, kd = 0.015) # Input 
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
@@ -242,7 +246,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB17STreatment.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB17STreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -296,7 +300,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
 p.17 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/PCB17ALV_S_Treatment.png", plot = p.4, width = 15,
+ggsave("Output/Plots/RTM/S/AVL/PCB17ALV_S_Treatment.png", plot = p.17, width = 15,
        height = 5, dpi = 500)
 
 

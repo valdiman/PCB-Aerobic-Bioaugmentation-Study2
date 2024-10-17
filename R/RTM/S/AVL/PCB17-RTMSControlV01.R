@@ -109,14 +109,12 @@ rtm.PCB17 = function(t, state, parms){
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  ro <- 0.00025 # m3/d sampling rate
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
   Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
-  ko <- 100 # cm/d PCB 4 mass transfer coefficient to SPME
   
   # Sediment partitioning
   M <- 0.1 # kg/L solid-water ratio
@@ -146,11 +144,14 @@ rtm.PCB17 = function(t, state, parms){
   # Bioavailability factor B
   B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
   
-  # Biotransformation rate
-  kb <- 0.0 #23 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  # Passive sampler rates
+  ro <- parms$ro # m3/d sampling rate for PUF
+  ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
-  # Sortion and desorption constants
+  # Biotransformation, sortion and desorption rates
+  kb <- parms$kb #1/d
   ka <- parms$ka #1/d
+  kd <- parms$kd #1/d
   kd <- parms$kd #1/d
   
   # derivatives dx/dt are computed below
@@ -177,7 +178,7 @@ K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ka = 5, kd = 0.0015) # Input 
+parms <- list(ro = 0.00025, ko = 2.5, kb = 0.0, ka = 10, kd = 0.015) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
@@ -242,7 +243,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB17SControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB17SControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -296,7 +297,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
 p.17 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/PCB17ALV_S_Control.png", plot = p.4, width = 15,
+ggsave("Output/Plots/RTM/S/AVL/PCB17ALV_S_Control.png", plot = p.17, width = 15,
        height = 5, dpi = 500)
 
 

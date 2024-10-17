@@ -149,7 +149,7 @@ rtm.PCB4 = function(t, state, parms){
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
   # Biotransformation, sortion and desorption rates
-  kb <- parms$kb
+  kb <- parms$kb #1/d
   ka <- parms$ka #1/d
   kd <- parms$kd #1/d
   
