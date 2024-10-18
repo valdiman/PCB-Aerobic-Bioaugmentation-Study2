@@ -120,14 +120,12 @@ rtm.PCB4 = function(t, state, parms){
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366*log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  ro <- 0.00005 # m3/d sampling rate ?
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
   Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06*log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
-  ko <- 10 # cm/d PCB 4 mass transfer coefficient to SPME
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
@@ -152,8 +150,12 @@ rtm.PCB4 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Biotransformation rate
-  kb <- 0.025 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  # Passive sampler rates
+  ro <- parms$ro # m3/d sampling rate for PUF
+  ko <- parms$ko # cm/d mass transfer coefficient to SPME
+  
+  # Biotransformation, sortion and desorption rates
+  kb <- parms$kb
   
   # derivatives dx/dt are computed below
   Cpw <- state[1]
@@ -161,6 +163,11 @@ rtm.PCB4 = function(t, state, parms){
   mf <- state[3]
   Ca <- state[4]
   mpuf <- state[5]
+  
+  # new kb works before 5 days
+  if (t < 4) {
+    kb <- 0.17 # From previous experiments
+  }
   
   dCpwdt <- -kb * Cpw
   dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) + ks * Aws * 60 * 60 * 24 / Vw * (Cpw - Cw) - kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
@@ -175,17 +182,17 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 630.2023 * 3.8  # ng/g PCB 4 sediment concentration
+Ct <- 630.2023 * 5  # ng/g PCB 4 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
 logKoc <- 0.94*log10(Kow) + 0.42 # koc calculation
 Kd <- foc*10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 Cpw <- Ct / Kd * 1000 # [ng/L]
-
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-t.1 <- unique(pcb_combined_control$time)
+parms <- list(ro = 0.00008, ko = 1, kb = 0.02) # Input
+t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
-out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4)
+out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
 
 # Ensure observed data is in a tibble
@@ -237,7 +244,7 @@ print(paste("R-squared for mpuf (average): ", mpuf_r2_value))
 # Run the model with the new time sequence
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 t_daily <- seq(0, 75, by = 1)  # Adjust according to your needs
-out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4)
+out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4, parms = parms)
 
 # Convert model results to tibble and ensure numeric values
 model_results_daily_clean <- as_tibble(out_daily) %>%
@@ -247,7 +254,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-# write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB4NSTreatment.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB4NSTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -296,7 +303,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
   scale_color_manual(values = c("Model" = "blue", "Observed" = "red")) +
   theme_bw() +
   theme(legend.title = element_blank()) +
-  ylim(0, 200)
+  ylim(0, 100)
 
 # Arrange plots side by side
 p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)

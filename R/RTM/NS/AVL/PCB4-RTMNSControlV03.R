@@ -167,17 +167,17 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 630.2023 * 3 # ng/g PCB 4 sediment concentration
+Ct <- 630.2023 * 5 # ng/g PCB 4 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 Cpw <- Ct / Kd * 1000 # [ng/L]
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.00011, ko = 10, kb = 0.03) # Input 
+parms <- list(ro = 0.0001, ko = 1, kb = 0.05) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
-out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4)
+out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
 
 # Ensure observed data is in a tibble
@@ -229,7 +229,7 @@ print(paste("R-squared for mpuf (average): ", mpuf_r2_value))
 # Run the model with the new time sequence
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 t_daily <- seq(0, 75, by = 1)  # Adjust according to your needs
-out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4)
+out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4, parms = parms)
 
 # Convert model results to tibble and ensure numeric values
 model_results_daily_clean <- as_tibble(out_daily) %>%
@@ -239,7 +239,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB4NSControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB4NSControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -293,7 +293,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
 p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/PCB4ALV_NS_Control.png", plot = p.4, width = 15,
+ggsave("Output/Plots/RTM/NS/AVL/PCB4ALV_NS_Control.png", plot = p.4, width = 15,
        height = 5, dpi = 500)
 
 
