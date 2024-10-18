@@ -178,7 +178,7 @@ K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.00025, ko = 2.5, kb = 0.0, ka = 10, kd = 0.015) # Input 
+parms <- list(ro = 0.00025, ko = 2.5, kb = 0.01, ka = 10, kd = 0.015) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
