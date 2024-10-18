@@ -94,7 +94,6 @@ rtm.PCB31 = function(t, state, parms){
   MW.pcb <- 257.532 # g/mol PCB 31 molecular weight
   
   # Bioreactor parameters
-  Vpw <- 25 #cm3 porewater volume 
   Vw <- 100 # cm3 water volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
@@ -152,7 +151,6 @@ rtm.PCB31 = function(t, state, parms){
   kb <- parms$kb #1/d
   ka <- parms$ka #1/d
   kd <- parms$kd #1/d
-  kd <- parms$kd #1/d
   
   # derivatives dx/dt are computed below
   Cw <- state[1]
@@ -171,7 +169,7 @@ rtm.PCB31 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 254.599912 * 2.5 # ng/g PCB 19 sediment concentration
+Ct <- 254.599912 * 4.5 # ng/g PCB 19 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(5.67) # PCB 19 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
@@ -179,7 +177,7 @@ K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.0002, ko = 20, kb = 0.0, ka = 3, kd = 0.00001) # Input
+parms <- list(ro = 0.0003, ko = 5, kb = 0.0, ka = 25, kd = 0.0001) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB31, parms = parms)
