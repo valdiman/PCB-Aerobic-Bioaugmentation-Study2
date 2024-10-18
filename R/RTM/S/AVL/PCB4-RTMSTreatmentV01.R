@@ -159,6 +159,11 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[3]
   mpuf <- state[4]
   
+  # new kb works before 3 days
+  #if (t < 10) {
+  #  kb <- 0.17 # From previous experiments
+  #}
+  
   dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) + kd * Cw * K * M - ka * Cw - kb * Cw) / B # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw)
@@ -178,8 +183,8 @@ K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
-kb2 <- 0.2
-Cwi <- Cwi * exp(-kb2 * 12) # 3 days?
+kb2 <- 0.17
+Cwi <- Cwi * exp(-kb2 * 15) # 3 days?
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 0.00025, ko = 1, kb = 0.03, ka = 7, kd = 0.015) # Input 
 t.1 <- unique(pcb_combined_treatment$time)
