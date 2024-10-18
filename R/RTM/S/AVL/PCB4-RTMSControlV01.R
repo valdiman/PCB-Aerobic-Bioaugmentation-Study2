@@ -94,7 +94,6 @@ rtm.PCB4 = function(t, state, parms){
   MW.pcb <- 223.088 # g/mol PCB 4 molecular weight
   
   # Bioreactor parameters
-  Vpw <- 25 #cm3 porewater volume 
   Vw <- 100 # cm3 water volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
@@ -175,11 +174,10 @@ foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-ds <- 900 # g/L sediment density
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.00025, ko = 1, kb = 0.0, ka = 7, kd = 0.015) # Input 
+parms <- list(ro = 0.00025, ko = 1, kb = 0.03, ka = 7, kd = 0.015) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)

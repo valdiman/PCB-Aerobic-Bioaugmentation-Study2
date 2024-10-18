@@ -111,14 +111,12 @@ rtm.PCB4 = function(t, state, parms){
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  ro <- 0.00011 # m3/d sampling rate
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
   Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
-  ko <- 10 # cm/d PCB 4 mass transfer coefficient to SPME
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
@@ -143,8 +141,12 @@ rtm.PCB4 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Biotransformation rate
-  kb <- 0.03 # 1/d, value changes depending on experiment 0.023 from SPME calibration
+  # Passive sampler rates
+  ro <- parms$ro # m3/d sampling rate for PUF
+  ko <- parms$ko # cm/d mass transfer coefficient to SPME
+  
+  # Biotransformation, sortion and desorption rates
+  kb <- parms$kb
   
   # derivatives dx/dt are computed below
   Cpw <- state[1]
@@ -172,6 +174,7 @@ logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 Cpw <- Ct / Kd * 1000 # [ng/L]
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
+parms <- list(ro = 0.00011, ko = 10, kb = 0.03) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4)
