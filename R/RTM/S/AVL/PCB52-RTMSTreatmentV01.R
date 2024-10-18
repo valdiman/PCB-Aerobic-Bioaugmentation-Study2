@@ -176,8 +176,8 @@ logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 M <- 0.1 # kg/L solid-water ratio
 Cwi <- Ct * M * 1000 / (1 + M * K)
-kb2 <- 0.12
-Cwi <- Cwi * exp(-kb2 * 11) # n days?
+kb2 <- 0.08
+Cwi <- Cwi * exp(-kb2 * 2) # n days?
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 0.0003, ko = 5, kb = 0.0, ka = 25, kd = 0.0001) # Input
 t.1 <- unique(pcb_combined_control$time)
@@ -244,7 +244,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB52AVLSControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB52AVLSTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -298,7 +298,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
 p.52 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/S/AVL/PCB52ALV_S_Control.png", plot = p.52, width = 15,
+ggsave("Output/Plots/RTM/S/AVL/PCB52ALV_S_Treatment.png", plot = p.52, width = 15,
        height = 5, dpi = 500)
 
 
