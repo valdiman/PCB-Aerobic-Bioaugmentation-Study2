@@ -165,8 +165,8 @@ rtm.PCB4 = function(t, state, parms){
   mpuf <- state[5]
   
   # new kb works before 3 days
-  if (t < 3) {
-    kb <- 0.17  # kb = 0.14 (from previous experiments)
+  if (t < 2) {
+    kb <- 0.14 # From previous experiments
   }
   
   dCpwdt <- -kb * Cpw
@@ -189,7 +189,7 @@ logKoc <- 0.94*log10(Kow) + 0.42 # koc calculation
 Kd <- foc*10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 Cpw <- Ct / Kd * 1000 # [ng/L]
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.00009, ko = 1, kb = 0.03) # Input
+parms <- list(ro = 0.00009, ko = 1, kb = 0.04) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
@@ -302,13 +302,14 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
   labs(x = "Time", y = "mpuf [ng/PUF]") +
   scale_color_manual(values = c("Model" = "blue", "Observed" = "red")) +
   theme_bw() +
-  theme(legend.title = element_blank())
+  theme(legend.title = element_blank()) +
+  ylim(0, 100)
 
 # Arrange plots side by side
 p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/NS/AVL/PCB4ALV_NS_Treatment.png", plot = p.4, width = 15,
+ggsave("Output/Plots/RTM/PCB4ALV_NS_Treatment.png", plot = p.4, width = 15,
        height = 5, dpi = 500)
 
 
