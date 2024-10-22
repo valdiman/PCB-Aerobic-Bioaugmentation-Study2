@@ -154,8 +154,12 @@ rtm.PCB19 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Biotransformation rate
-  kb <- 0 # 1/d No biodegration in control
+  # Passive sampler rates
+  ro <- parms$ro # m3/d sampling rate for PUF
+  ko <- parms$ko # cm/d mass transfer coefficient to SPME
+  
+  # Biotransformation, sortion and desorption rates
+  kb <- parms$kb
   
   # derivatives dx/dt are computed below
   Cpw <- state[1]
@@ -176,16 +180,17 @@ rtm.PCB19 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 19 concentration in sediment porewater)
-Ct <- 259.8342356 * 3 # ng/g PCB 19 sediment concentration
+Ct <- 259.8342356 * 5 # ng/g PCB 19 sediment concentration
 foc <- 0.03 # organic carbon % in sediment
 Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
 logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
 Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 Cpw <- Ct / Kd * 1000 # [ng/L]
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
+parms <- list(ro = 0.00015, ko = 1, kb = 0.01) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
-out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19)
+out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
 head(out.1)
 
 # Ensure observed data is in a tibble
@@ -237,7 +242,7 @@ print(paste("R-squared for mpuf (average): ", mpuf_r2_value))
 # Run the model with the new time sequence
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 t_daily <- seq(0, 75, by = 1)  # Adjust according to your needs
-out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB19)
+out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB19, parms = parms)
 
 # Convert model results to tibble and ensure numeric values
 model_results_daily_clean <- as_tibble(out_daily) %>%
@@ -247,7 +252,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/PCB19NSTreatment.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB19NSTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -301,6 +306,6 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
 p.19 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/PCB19ALV_NS_Treatment.png", plot = p.19, width = 6,
+ggsave("Output/Plots/RTM/NS/AVL/PCB19ALV_NS_Treatment.png", plot = p.19, width = 6,
        height = 5, dpi = 500)
 
