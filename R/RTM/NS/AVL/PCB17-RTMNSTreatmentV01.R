@@ -174,9 +174,9 @@ rtm.PCB17 = function(t, state, parms){
   
   # new kb works before 3 days
   if (t < tb1) {
-    kb <- 0.0
+    kb <- 0.14
   } else if (t >= tb1 & t < tb2) {
-    kb <- 0.15  # Your second condition
+    kb <- 0.01  # Your second condition
   }
   
   dCpwdt <- ks * Aws * 60 * 60 * 24 / Vpw * (Cw - Cpw) - (kb / 5) * Cpw
@@ -205,7 +205,7 @@ logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
 Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 Cpw <- Ct / Kd * 1000 # [ng/L]
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.0004, ko = 10, tb1 = 20, tb2 = 35, kb = 0.01) # Input
+parms <- list(ro = 0.00008, ko = 10, tb1 = 2, tb2 = 42, kb = 0.0) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
