@@ -1,6 +1,6 @@
-# Code to model PCB 4 in laboratory experiments
+# Code to model PCB 17 in laboratory experiments
 # using sediment from Altavista, VI. Passive measurements
-# of PCB 4 in the water and the air phases are predicted and
+# of PCB 17 in the water and the air phases are predicted and
 # linked to the water and air concentrations from the passive
 # samplers.
 
