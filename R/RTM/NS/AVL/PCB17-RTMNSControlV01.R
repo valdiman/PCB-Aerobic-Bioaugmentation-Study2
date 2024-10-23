@@ -127,11 +127,6 @@ rtm.PCB17 = function(t, state, parms){
   Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
   Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 17-SPME equilibrium partition coefficient
   
-  # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  K <- foc * (10^(0.94 * log10(Kow.t) + 0.42)) #L/kg sediment-water equilibrium partition coefficient
-  
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
   D.co2.w <- 1.67606E-05 # cm2/s CO2's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars 
@@ -177,7 +172,7 @@ rtm.PCB17 = function(t, state, parms){
     kb <- 0.0  # Control
   }
   
-  dCpwdt <- ks * Aws * 60 * 60 * 24 / Vpw * (Cw - Cpw) - (kb / 5) * Cpw
+  dCpwdt <- ks * Aws * 60 * 60 * 24 / Vpw * (Cw - Cpw)
   dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) + ks * Aws * 60 * 60 * 24 / Vw * (Cpw - Cw) - kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
@@ -189,19 +184,22 @@ rtm.PCB17 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-Ct <- 307.3052312 * 5  # ng/g PCB 17 sediment concentration
-foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
-dUow <- -22888.94 # internal energy for the transfer of octanol-water for PCB 17 (J/mol)
-R <- 8.3144 # J/(mol K) molar gas constant
-Tst <- 25 #C air temperature
-Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
-Tw <- 20 # C water temperature
-Tw.1 <- 273.15 + Tw
-Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
-logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-Cpw <- Ct / Kd * 1000 # [ng/L]
+{
+  # Estimate initial Cpw(o)
+  Ct <- 307.3052312 * 5  # ng/g PCB 17 sediment concentration
+  foc <- 0.03 # organic carbon % in sediment
+  Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
+  dUow <- -22888.94 # internal energy for the transfer of octanol-water for PCB 17 (J/mol)
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
+  Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  Cpw <- Ct / Kd * 1000 # [ng/L]
+}
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 0.0004, ko = 10, tb = 0, kb = 0.01) # Input
 t.1 <- unique(pcb_combined_control$time)
@@ -268,7 +266,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB17NSControl.csv")
+#write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB17NSControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
