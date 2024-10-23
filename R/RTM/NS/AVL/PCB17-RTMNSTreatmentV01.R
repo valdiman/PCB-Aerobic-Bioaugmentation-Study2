@@ -102,7 +102,7 @@ rtm.PCB17 = function(t, state, parms){
   
   # Bioreactor parameters
   Vw <- 100 # cm3 water volume
-  Vpw <- 25 # cm3 porewater volume
+  Vpw <- 2.5 # cm3 porewater volume
   Va <- 125 # cm3 headspace volume
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
@@ -125,11 +125,6 @@ rtm.PCB17 = function(t, state, parms){
   L <- 1 # cm SPME length normalization to 1 cm
   Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
   Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 17-SPME equilibrium partition coefficient
-  
-  # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  K <- foc * (10^(0.94 * log10(Kow.t) + 0.42)) #L/kg sediment-water equilibrium partition coefficient
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 

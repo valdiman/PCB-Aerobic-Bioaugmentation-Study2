@@ -105,17 +105,25 @@ rtm.PCB19 = function(t, state, parms){
   # Experimental conditions
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
-  MW.pcb <- 257.532 # g/mol PCB 19 molecular weight
+  MW.pcb <- 257.532 # g/mol PCB 17 molecular weight
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
   
   # Bioreactor parameters
   Vw <- 100 # cm3 water volume
+  Vpw <- 2.5 # cm3 porewater volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
   
   # Congener-specific constants
   Kaw <- 0.018048667 # PCB 19 dimensionless Henry's law constant @ 25 C
+  dUaw <- 51590.22 # internal energy for the transfer of air-water for PCB 19 (J/mol)
   Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
+  dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
   Koa <- 10^(6.763554861) # PCB 19 octanol-air equilibrium partition coefficient
 
   # PUF constants 
@@ -166,7 +174,7 @@ rtm.PCB19 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
-  dCpwdt <- -kb * Cpw
+  dCpwdt <- ks * Aws * 60 * 60 * 24 / Vpw * (Cw - Cpw)
   dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) + ks * Aws * 60 * 60 * 24 / Vw * (Cpw - Cw) - kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw)
