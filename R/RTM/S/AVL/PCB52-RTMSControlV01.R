@@ -169,13 +169,15 @@ rtm.PCB52 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 52 concentration in sediment porewater)
-Ct <- 321.4900673 * 4.5 # ng/g PCB 52 sediment concentration
-foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(5.84) # PCB 52 octanol-water equilibrium partition coefficient
-logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
-K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-M <- 0.1 # kg/L solid-water ratio
-Cwi <- Ct * M * 1000 / (1 + M * K)
+{
+  Ct <- 321.4900673 * 4.5 # ng/g PCB 52 sediment concentration
+  foc <- 0.03 # organic carbon % in sediment
+  Kow <- 10^(5.84) # PCB 52 octanol-water equilibrium partition coefficient
+  logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  M <- 0.1 # kg/L solid-water ratio
+  Cwi <- Ct * M * 1000 / (1 + M * K)
+}
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 0.0003, ko = 5, kb = 0.0, ka = 25, kd = 0.0001) # Input
 t.1 <- unique(pcb_combined_control$time)

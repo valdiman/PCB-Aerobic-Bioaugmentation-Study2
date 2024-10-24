@@ -169,25 +169,27 @@ rtm.PCB52 = function(t, state, parms){
 
 # Initial conditions and run function
 # Estimating Cpw (PCB 52 concentration in sediment porewater)
-Ct <- 321.4900673 * 4.5 # ng/g PCB 52 sediment concentration
-foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(5.84) # PCB 52 octanol-water equilibrium partition coefficient
-logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
-K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-M <- 0.1 # kg/L solid-water ratio
-Cwi <- Ct * M * 1000 / (1 + M * K)
-kb2 <- 0.08
-Cwi <- Cwi * exp(-kb2 * 2) # n days?
+{
+  Ct <- 321.4900673 * 4.5 # ng/g PCB 52 sediment concentration
+  foc <- 0.03 # organic carbon % in sediment
+  Kow <- 10^(5.84) # PCB 52 octanol-water equilibrium partition coefficient
+  logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  M <- 0.1 # kg/L solid-water ratio
+  Cwi <- Ct * M * 1000 / (1 + M * K)
+  kb2 <- 0.13
+  Cwi <- Cwi * exp(-kb2 * 2) # n days? 
+}
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 0.0003, ko = 5, kb = 0.0, ka = 25, kd = 0.0001) # Input
-t.1 <- unique(pcb_combined_control$time)
+t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB52, parms = parms)
 head(out.1)
 
 # Ensure observed data is in a tibble
-observed_data <- as_tibble(pcb_combined_control) %>%
-  select(time, mf_Control, mpuf_Control)
+observed_data <- as_tibble(pcb_combined_treatment) %>%
+  select(time, mf_Treatment, mpuf_Treatment)
 
 # Convert model results to tibble, ensuring 'time' is numeric and rename columns if needed
 model_results <- as_tibble(out.1) %>%
@@ -204,9 +206,9 @@ grouped_comparison <- comparison_data %>%
   group_by(time) %>%  # Adjust the grouping variable if needed
   summarise(
     avg_mf_model = mean(mf, na.rm = TRUE),
-    avg_mf_observed = mean(mf_Control, na.rm = TRUE),
+    avg_mf_observed = mean(mf_Treatment, na.rm = TRUE),
     avg_mpuf_model = mean(mpuf, na.rm = TRUE),
-    avg_mpuf_observed = mean(mpuf_Control, na.rm = TRUE)
+    avg_mpuf_observed = mean(mpuf_Treatment, na.rm = TRUE)
   )
 
 # Define function to calculate R-squared, handling NA values
@@ -255,12 +257,12 @@ model_data_long <- model_results_daily_clean %>%
 
 # Clean observed data and prepare for plotting
 observed_data_clean <- observed_data %>%
-  pivot_longer(cols = c(mf_Control, mpuf_Control), 
+  pivot_longer(cols = c(mf_Treatment, mpuf_Treatment), 
                names_to = "variable", 
                values_to = "observed_value") %>%
   mutate(variable = recode(variable, 
-                           "mf_Control" = "mf", 
-                           "mpuf_Control" = "mpuf"),
+                           "mf_Treatment" = "mf", 
+                           "mpuf_Treatment" = "mpuf"),
          type = "Observed")
 
 plot_data_daily <- bind_rows(
