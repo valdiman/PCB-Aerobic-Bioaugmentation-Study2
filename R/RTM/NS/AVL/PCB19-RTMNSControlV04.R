@@ -163,13 +163,6 @@ rtm.PCB19 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Cpw calculations
-  Cs <- 259.8342356 * 1.5
-  foc <- 0.03 # organic carbon % in sediment
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # Koc calculation
-  Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-  Cpw <- Cs / Kd * 1000 # [ng/L]
-  
   # Passive sampler rates
   ro <- parms$ro # m3/d sampling rate for PUF
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
@@ -178,34 +171,46 @@ rtm.PCB19 = function(t, state, parms){
   kb <- parms$kb
   tb <- parms$tb
   
-  # Desorption parameters
-  f <- parms$f
-  kf <- parms$kf
-  ks <- parms$ks
-  
   # derivatives dx/dt are computed below
-  Cs <- state[1]
-  Cpw <- state[2]
-  Cw <- state[3]
-  mf <- state[4]
-  Ca <- state[5]
-  mpuf <- state[6]
+  Cpw <- state[1]
+  Cw <- state[2]
+  mf <- state[3]
+  Ca <- state[4]
+  mpuf <- state[5]
   
-  dCsdt <- -(kf * f + ks * (1 - f)) * Cs
-  dCpwdt <- ks * Aws * 60 * 60 * 24 / Vpw * (Cw - Cpw)
+  # new kb works before 3 days
+  if (t < tb) {
+    kb <- 0.05  # Control
+  }
+  
+  dCpwdt <- -kb * Cpw
   dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) + ks * Aws * 60 * 60 * 24 / Vw * (Cpw - Cw) - kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
   
   # The computed derivatives are returned as a list
-  return(list(c(dCsdt, dCpwdt, dCwdt, dmfdt, dCadt, dmpufdt)))
+  return(list(c(dCpwdt, dCwdt, dmfdt, dCadt, dmpufdt)))
 }
 
 # Initial conditions and run function
-Cs_init <- 259.8342356 * 1.5  # Initial PCB 19 concentration in sediment [ng/g]
-cinit <- c(Cs = Cs_init, Cpw = 0, Cw = 0, mf = 0, Ca = 0, mpuf = 0) 
-parms <- list(ro = 0.00015, ko = 1, tb = 0, kb = 0.0, f = 0.70, kf = 1.2, ks = 0.01) # Input
+{
+  Ct <- 259.8342356 * 4 # ng/g PCB 19 sediment concentration
+  foc <- 0.03 # organic carbon % in sediment
+  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
+  dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
+  Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  Cpw <- Ct / Kd * 1000 # [ng/L]
+}
+cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
+parms <- list(ro = 0.0003, ko = 1, tb = 30, kb = 0.0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)

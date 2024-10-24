@@ -105,31 +105,38 @@ rtm.PCB19 = function(t, state, parms){
   # Experimental conditions
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
-  MW.pcb <- 257.532 # g/mol PCB 19 molecular weight
+  MW.pcb <- 257.532 # g/mol PCB 17 molecular weight
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
   
   # Bioreactor parameters
   Vw <- 100 # cm3 water volume
+  Vpw <- 2.5 # cm3 porewater volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
   
   # Congener-specific constants
   Kaw <- 0.018048667 # PCB 19 dimensionless Henry's law constant @ 25 C
+  dUaw <- 51590.22 # internal energy for the transfer of air-water for PCB 19 (J/mol)
   Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
+  dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
   Koa <- 10^(6.763554861) # PCB 19 octanol-air equilibrium partition coefficient
-
+  
   # PUF constants 
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 52-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
-  ro <- 0.00005 # m3/d sampling rate
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
   Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length average
-  Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 52-SPME equilibrium partition coefficient
-  ko <- 1 # cm/d PCB 19 mass transfer coefficient to SPME
+  Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
+  Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 52-SPME equilibrium partition coefficient
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
@@ -145,12 +152,14 @@ rtm.PCB19 = function(t, state, parms){
   ks.m.d <- ks * 60 * 60 * 24 / 100 # [m/d]
   
   # kaw calculations (air-water mass transfer coefficient)
-  # i) Kaw.a, air-side mass transfer coefficient
+  # i) Ka.w.t, ka.w corrected by water and air temps during experiment
+  Kaw.t <- Kaw*exp(-dUaw/R*(1/Tw.1-1/Tst.1))*Tw.1/Tst.1
+  # ii) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
-  # ii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
+  # iii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
   Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
-  # iii) kaw, overall air-water mass transfer coefficient for PCB 4
-  kaw.o <- (1/(Kaw.a*Kaw) + (1/Kaw.w))^-1 # [m/s]
+  # iv) kaw, overall air-water mass transfer coefficient for PCB 4
+  kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
@@ -160,6 +169,7 @@ rtm.PCB19 = function(t, state, parms){
   
   # Biotransformation, sortion and desorption rates
   kb <- parms$kb
+  tb <- parms$tb
   
   # derivatives dx/dt are computed below
   Cpw <- state[1]
@@ -168,27 +178,40 @@ rtm.PCB19 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
+  # new kb works before 3 days
+  if (t < tb) {
+    kb <- 0.05  # Control
+  }
+  
   dCpwdt <- -kb * Cpw
-  dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) + ks * Aws * 60 * 60 * 24 / Vw * (Cpw - Cw) - kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
+  dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) + ks * Aws * 60 * 60 * 24 / Vw * (Cpw - Cw) - kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
-  dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw)
-  dpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
+  dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
+  dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
   
   # The computed derivatives are returned as a list
-  return(list(c(dCpwdt, dCwdt, dmfdt, dCadt, dpufdt)))
+  return(list(c(dCpwdt, dCwdt, dmfdt, dCadt, dmpufdt)))
 }
 
 # Initial conditions and run function
-# Estimating Cpw (PCB 19 concentration in sediment porewater)
-Ct <- 259.8342356 * 5 # ng/g PCB 19 sediment concentration
-foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
-logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
-Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-Cpw <- Ct / Kd * 1000 # [ng/L]
+{
+  Ct <- 259.8342356 * 3 # ng/g PCB 19 sediment concentration
+  foc <- 0.03 # organic carbon % in sediment
+  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
+  dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
+  Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  Cpw <- Ct / Kd * 1000 # [ng/L]
+}
 cinit <- c(Cpw = Cpw, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.00015, ko = 1, kb = 0.01) # Input
-t.1 <- unique(pcb_combined_control$time)
+parms <- list(ro = 0.0003, ko = 1, tb = 30, kb = 0.0) # Input
+t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
 head(out.1)
@@ -252,7 +275,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB19NSTreatment.csv")
+#write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB19NSTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
