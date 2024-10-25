@@ -1,6 +1,6 @@
-# Code to model PCB 19 in laboratory experiments
+# Code to model PCB 31 in laboratory experiments
 # using sediment from Altavista, VI. Passive measurements
-# of PCB 19 in the water and the air phases are predicted and
+# of PCB 31 in the water and the air phases are predicted and
 # linked to the water and air concentrations from the passive
 # samplers.
 
@@ -92,6 +92,11 @@ rtm.PCB31 = function(t, state, parms){
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
   MW.pcb <- 257.532 # g/mol PCB 31 molecular weight
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
   
   # Bioreactor parameters
   Vw <- 100 # cm3 water volume
@@ -147,10 +152,12 @@ rtm.PCB31 = function(t, state, parms){
   ro <- parms$ro # m3/d sampling rate for PUF
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
-  # Biotransformation, sortion and desorption rates
-  kb <- parms$kb #1/d
-  ka <- parms$ka #1/d
-  kd <- parms$kd #1/d
+  # Sorption and desorption rates
+  ka <- parms$ka # 1/d
+  kd <- parms$kd # 1/d
+  
+  # Biotransformation parameters
+  kb <- parms$kb # 1/d
   
   # derivatives dx/dt are computed below
   Cw <- state[1]
@@ -168,14 +175,16 @@ rtm.PCB31 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-# Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 254.599912 * 4.5 # ng/g PCB 19 sediment concentration
-foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(5.67) # PCB 19 octanol-water equilibrium partition coefficient
-logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
-K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-M <- 0.1 # kg/L solid-water ratio
-Cwi <- Ct * M * 1000 / (1 + M * K)
+{
+  # Estimating Cpw (PCB 31 concentration in sediment porewater)
+  Ct <- 254.599912 * 4.5 # ng/g PCB 31 sediment concentration
+  foc <- 0.03 # organic carbon % in sediment
+  Kow <- 10^(5.67) # PCB 31 octanol-water equilibrium partition coefficient
+  logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  M <- 0.1 # kg/L solid-water ratio
+  Cwi <- Ct * M * 1000 / (1 + M * K)
+}
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 0.0003, ko = 5, kb = 0.0, ka = 25, kd = 0.0001) # Input
 t.1 <- unique(pcb_combined_control$time)

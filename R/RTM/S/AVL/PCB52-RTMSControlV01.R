@@ -147,10 +147,12 @@ rtm.PCB52 = function(t, state, parms){
   ro <- parms$ro # m3/d sampling rate for PUF
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
-  # Biotransformation, sortion and desorption rates
-  kb <- parms$kb #1/d
-  ka <- parms$ka #1/d
-  kd <- parms$kd #1/d
+  # Sorption and desorption rates
+  ka <- parms$ka # 1/d
+  kd <- parms$kd # 1/d
+  
+  # Biotransformation parameters
+  kb <- parms$kb # 1/d
   
   # derivatives dx/dt are computed below
   Cw <- state[1]
@@ -179,7 +181,7 @@ rtm.PCB52 = function(t, state, parms){
   Cwi <- Ct * M * 1000 / (1 + M * K)
 }
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.0003, ko = 5, kb = 0.0, ka = 25, kd = 0.0001) # Input
+parms <- list(ro = 0.0003, ko = 20, kb = 0.0, ka = 25, kd = 0.0001) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB52, parms = parms)

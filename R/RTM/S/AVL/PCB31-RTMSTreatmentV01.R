@@ -147,10 +147,12 @@ rtm.PCB31 = function(t, state, parms){
   ro <- parms$ro # m3/d sampling rate for PUF
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
-  # Biotransformation, sortion and desorption rates
-  kb <- parms$kb #1/d
-  ka <- parms$ka #1/d
-  kd <- parms$kd #1/d
+  # Sorption and desorption rates
+  ka <- parms$ka # 1/d
+  kd <- parms$kd # 1/d
+  
+  # Biotransformation parameters
+  kb <- parms$kb # 1/d
   
   # derivatives dx/dt are computed below
   Cw <- state[1]
@@ -158,7 +160,7 @@ rtm.PCB31 = function(t, state, parms){
   Ca <- state[3]
   mpuf <- state[4]
   
-  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) + kd * Cw * K * M - ka * Cw - kb * Cw) / B # 864 to change second to days and um to m, Ca in [ng/L]
+  dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) + (kd * Cw * K * M - ka * Cw - kb * Cw) / B # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw)
   dpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -168,18 +170,18 @@ rtm.PCB31 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-# Estimating Cpw (PCB 4 concentration in sediment porewater)
-Ct <- 254.599912 * 4.5 # ng/g PCB 31 sediment concentration
-foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(5.67) # PCB 31 octanol-water equilibrium partition coefficient
-logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
-K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-M <- 0.1 # kg/L solid-water ratio
-Cwi <- Ct * M * 1000 / (1 + M * K)
-kb2 <- 0.14
-Cwi <- Cwi * exp(-kb2 * 11) # n days?
+{
+  # Estimating Cpw (PCB 31 concentration in sediment porewater)
+  Ct <- 254.599912 * 0.8 # ng/g PCB 31 sediment concentration
+  foc <- 0.03 # organic carbon % in sediment
+  Kow <- 10^(5.67) # PCB 31 octanol-water equilibrium partition coefficient
+  logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  M <- 0.1 # kg/L solid-water ratio
+  Cwi <- Ct * M * 1000 / (1 + M * K)
+}
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.0003, ko = 5, kb = 0.0, ka = 25, kd = 0.0001) # Input
+parms <- list(ro = 0.0003, ko = 5, kb = 0.1817, ka = 25, kd = 0.0001) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB31, parms = parms)
