@@ -171,7 +171,7 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[3]
   mpuf <- state[4]
   
-  dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) + kd * Cw * K * M - ka * Cw - kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
+  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) + kd * Cw * K * M - ka * Cw - kb * Cw) / B # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
