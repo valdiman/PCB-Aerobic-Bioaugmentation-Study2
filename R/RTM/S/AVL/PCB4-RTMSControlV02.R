@@ -176,10 +176,10 @@ rtm.PCB4 = function(t, state, parms){
   dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) +  Cw * K * M * (kf * f + ks * (1 - f)) - ka * Cw - kb * Cw - ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)) )/ B # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
-  dpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
+  dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
   
   # The computed derivatives are returned as a list
-  return(list(c(dCwdt, dmfdt, dCadt, dpufdt)))
+  return(list(c(dCwdt, dmfdt, dCadt, dmpufdt)))
 }
 
 # Initial conditions and run function
