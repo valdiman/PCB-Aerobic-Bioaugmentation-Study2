@@ -92,6 +92,11 @@ rtm.PCB17 = function(t, state, parms){
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
   MW.pcb <- 257.532 # g/mol PCB 17 molecular weight
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
   
   # Bioreactor parameters
   Vpw <- 25 #cm3 porewater volume 
@@ -102,7 +107,9 @@ rtm.PCB17 = function(t, state, parms){
   
   # Congener-specific constants
   Kaw <- 0.015256157 # PCB 17 dimensionless Henry's law constant @ 25 C
+  dUaw <- 52590.22 # internal energy for the transfer of air-water for PCB 17 (J/mol)
   Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
+  dUow <-  -22888.94 # internal energy for the transfer of octanol-water for PCB 17 (J/mol)
   Koa <- 10^(7.066554861) # PCB 17 octanol-air equilibrium partition coefficient
   
   # PUF constants 
@@ -119,7 +126,9 @@ rtm.PCB17 = function(t, state, parms){
   # Sediment partitioning
   M <- 0.1 # kg/L solid-water ratio
   foc <- 0.03 # organic carbon % in particles
-  K <- foc * (10^(0.94 * log10(Kow) + 0.42)) #L/kg sediment-water equilibrium partition coefficient
+  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
@@ -132,13 +141,15 @@ rtm.PCB17 = function(t, state, parms){
   SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 4
 
   # kaw calculations (air-water mass transfer coefficient)
-  # i) Kaw.a, air-side mass transfer coefficient
+  # i) Ka.w.t, ka.w corrected by water and air temps during experiment
+  Kaw.t <- Kaw*exp(-dUaw/R*(1/Tw.1-1/Tst.1))*Tw.1/Tst.1
+  # ii) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
-  # ii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
+  # iii) Kaw.w, water-side mass transfer coefficient for PCB 17. 600 is the Schmidt number of CO2 at 298 K
   Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
-  # iii) kaw, overall air-water mass transfer coefficient for PCB 4
-  kaw.o <- (1/(Kaw.a*Kaw) + (1/Kaw.w))^-1 # [m/s]
-  # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
+  # iv) kaw, overall air-water mass transfer coefficient for PCB 17
+  kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
+  # v) kaw, overall air-water mass transfer coefficient for PCB 17, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
@@ -148,11 +159,12 @@ rtm.PCB17 = function(t, state, parms){
   ro <- parms$ro # m3/d sampling rate for PUF
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
-  # Biotransformation, sortion and desorption rates
-  kb <- parms$kb #1/d
-  ka <- parms$ka #1/d
-  kd <- parms$kd #1/d
-  kd <- parms$kd #1/d
+  # Sorption and desorption rates
+  ka <- parms$ka # 1/d
+  kd <- parms$kd # 1/d
+  
+  # Biotransformation parameters
+  kb <- parms$kb # 1/d
   
   # derivatives dx/dt are computed below
   Cw <- state[1]
@@ -160,9 +172,9 @@ rtm.PCB17 = function(t, state, parms){
   Ca <- state[3]
   mpuf <- state[4]
   
-  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw) - Cw) + kd * Cw * K * M - ka * Cw - kb * Cw) / B # 864 to change second to days and um to m, Ca in [ng/L]
+  dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) + (kd * Cw * K * M - ka * Cw - kb * Cw) / B # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
-  dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw)
+  dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
   
   # The computed derivatives are returned as a list
@@ -170,15 +182,24 @@ rtm.PCB17 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-Ct <- 307.3052312 * 4  # ng/g PCB 17 sediment concentration
-foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
-logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
-K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-M <- 0.1 # kg/L solid-water ratio
-Cwi <- Ct * M * 1000 / (1 + M * K)
+{
+  Ct <- 307.3052312 * 4  # ng/g PCB 17 sediment concentration
+  foc <- 0.03 # organic carbon % in sediment
+  Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
+  dUow <- -22888.94 # internal energy for the transfer of octanol-water for PCB 17 (J/mol)
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
+  Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  M <- 0.1 # kg/L solid-water ratio
+  Cwi <- Ct * M * 1000 / (1 + M * K)
+}
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.00025, ko = 2.5, kb = 0.01, ka = 10, kd = 0.015) # Input 
+parms <- list(ro = 0.00025, ko = 2.5, kb = 0.0, ka = 14, kd = 0.015) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
