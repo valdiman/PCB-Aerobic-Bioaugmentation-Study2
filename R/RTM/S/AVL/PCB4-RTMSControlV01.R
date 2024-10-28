@@ -123,6 +123,7 @@ rtm.PCB4 = function(t, state, parms){
   Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
   
   # Sediment partitioning
+  ms <- 10 # g
   M <- 0.1 # kg/L solid-water ratio
   foc <- 0.03 # organic carbon % in particles
   Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
@@ -152,7 +153,7 @@ rtm.PCB4 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
+  B <- (Vw + ms * K + Vf * L * 1000 + Va * Kaw.t) / Vw
   
   # Passive sampler rates
   ro <- parms$ro # m3/d sampling rate for PUF
@@ -183,7 +184,7 @@ rtm.PCB4 = function(t, state, parms){
 # Initial conditions and run function
 {
   # Estimating Cpw (PCB 4 concentration in sediment porewater)
-  Ct <- 630.2023 * 1 # ng/g PCB 4 sediment concentration
+  Ct <- 630.2023 * 5 # ng/g PCB 4 sediment concentration
   foc <- 0.03 # organic carbon % in sediment
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
   dUow <- -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
@@ -199,7 +200,7 @@ rtm.PCB4 = function(t, state, parms){
   Cwi <- Ct * M * 1000 / (1 + M * K)
 }
 cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.00025, ko = 1, kb = 0.04, ka = 4.3, kd = 0.021) # Input 
+parms <- list(ro = 0.00025, ko = 1, kb = 0.0, ka = 4.3, kd = 0.021) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
@@ -264,7 +265,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4SControl.csv")
+#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4SControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%

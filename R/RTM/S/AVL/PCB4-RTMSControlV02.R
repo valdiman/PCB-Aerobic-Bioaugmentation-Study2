@@ -152,7 +152,7 @@ rtm.PCB4 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
+  B <- (Vw + M * Vw * K + Vf * L * 1000 + Va * Kaw.t) / Vw
   
   # Passive sampler rates
   ro <- parms$ro # m3/d sampling rate for PUF
@@ -168,18 +168,20 @@ rtm.PCB4 = function(t, state, parms){
   kb <- parms$kb # 1/d
   
   # derivatives dx/dt are computed below
-  Cw <- state[1]
-  mf <- state[2]
-  Ca <- state[3]
-  mpuf <- state[4]
+  Cs <- state[1]
+  Cw <- state[2]
+  mf <- state[3]
+  Ca <- state[4]
+  mpuf <- state[5]
   
-  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) +  Cw * K * M * (kf * f + ks * (1 - f)) - ka * Cw - kb * Cw - ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)) )/ B # 864 to change second to days and um to m, Ca in [ng/L]
+  dCsdt <- Cs * (f * exp(-kf * t) + (1 - f) * exp(-ks * t))
+  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) +  Cw * K * M * (kf * f + ks * (1 - f)) - ka * Cw - kb * Cw - ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)) )/ B # Ca in [ng/L]
   dmfdt <- ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
   
   # The computed derivatives are returned as a list
-  return(list(c(dCwdt, dmfdt, dCadt, dmpufdt)))
+  return(list(c(dCsdt, dCwdt, dmfdt, dCadt, dmpufdt)))
 }
 
 # Initial conditions and run function
