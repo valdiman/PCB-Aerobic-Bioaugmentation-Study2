@@ -154,17 +154,17 @@ rtm.PCB4 = function(t, state, parms){
   # Bioavailability factor B
   B <- (Vw + M * Vw * K + Vf * L * 1000 + Va * Kaw.t) / Vw
   
-  # Passive sampler rates
-  ro <- parms$ro # m3/d sampling rate for PUF
-  ko <- parms$ko # cm/d mass transfer coefficient to SPME
+  # Bioremediation rate
+  kb <- parms$kb
   
   # Sorption and desorption rates
-  kd <- parms$kd # 1/d
+  kr <- parms$kr # 1/d
   f <- parms$f # fraction
   ka <- parms$ka # 1/d
   
-  # Biotransformation parameters
-  kb <- parms$kb # 1/d
+  # Passive sampler rates
+  ro <- parms$ro # m3/d sampling rate for PUF
+  ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
   # derivatives dx/dt are computed below
   Cs <- state[1]
@@ -173,9 +173,9 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
-  dCsdt <- - Cs * kd * f + ka * Cw
-  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) +  Cs * f * kd - ka * Cw - kb * Cw - ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)))  # Ca in [ng/L]
-  dmfdt <- ko * Af * Vw / (Vf * 10000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
+  dCsdt <- - Cs * kr * f + ka * Cw
+  dCwdt <- - ka * Cw +  Cs * kr * f - (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) + kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw
+  dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
   
@@ -201,30 +201,12 @@ rtm.PCB4 = function(t, state, parms){
   M <- 0.1 # kg/L solid-water ratio
   Cw0 <- Ct * M * 1000 / (1 + M * K) # ng/L
 }
-cinit <- c(Cw = Cw0, Cs = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.0045, ko = 10, kb = 0.0, kd = 0.01, f = 0.6, ka = 0.03) # Input 
+cinit <- c(Cs = 0, Cw = Cw0, mf = 0, Ca = 0, mpuf = 0)
+parms <- list(ro = 0.00045, ko = 1, kr = 0.000001, f = 0.6, ka = 0.02, kb = 0) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
-
-df <- as.data.frame(out.1)
-colnames(df) <- c("time", "Cs", "Cw")
-df$Ctotal <- df$Cs + df$Cw
-
-# Create the plot with all three lines
-ggplot(data = df, aes(x = time)) +
-  geom_line(aes(y = Cs, color = "Sediment (Cs)"), size = 1) +       # Line for Cs
-  geom_line(aes(y = Cw, color = "Water (Cw)"), size = 1) +          # Line for Cw
-  geom_line(aes(y = Ctotal, color = "Total (Ctotal)"), size = 1) +  # Line for total concentration Cs + Cw
-  labs(title = "Concentrations vs Time", 
-       x = "Time", 
-       y = "Concentration (ng/L)") +
-  scale_color_manual(values = c("Sediment (Cs)" = "blue", "Water (Cw)" = "red",
-                                "Total (Ctotal)" = "purple"),
-                     name = "Concentrations") +
-  theme_minimal()
-
 
 # Ensure observed data is in a tibble
 observed_data <- as_tibble(pcb_combined_control) %>%
@@ -273,7 +255,7 @@ print(paste("R-squared for mpuf (average): ", mpuf_r2_value))
 
 # Plot
 # Run the model with the new time sequence
-cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
+cinit <- c(Cs = 0, Cw = Cw0, mf = 0, Ca = 0, mpuf = 0)
 t_daily <- seq(0, 40, by = 1)  # Adjust according to your needs
 out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4, parms = parms)
 

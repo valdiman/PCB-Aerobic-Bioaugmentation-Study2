@@ -1,4 +1,23 @@
 
+# Packages and libraries --------------------------------------------------
+# Install packages
+install.packages("dplyr")
+install.packages("reshape2")
+install.packages("ggplot2")
+install.packages("deSolve")
+install.packages("tidyr")
+install.packages("gridExtra")
+
+# Load libraries
+{
+  library(dplyr) # organize data
+  library(reshape2) # organize data
+  library(ggplot2) # plotting
+  library(deSolve) # solving differential equations
+  library(tidyr)
+  library(gridExtra)
+}
+
 # Reactive transport function ---------------------------------------------
 rtm.PCB4 = function(t, state, parms){
   
@@ -35,15 +54,16 @@ rtm.PCB4 = function(t, state, parms){
   Cw <- state[2]
   mf <- state[3]
   
-  dCsdt <- (- Cs * kr * f + ka * Cw)
-  dCwdt <- (- ka * Cw +  Cs * kr * f)
-  dmfdt <- ko * Af * Vw / (Vf * 10000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
+  dCsdt <- - Cs * kr * f + ka * Cw
+  dCwdt <- - ka * Cw +  Cs * kr * f - (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf)))
+  dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt, dmfdt)))
 }
 {
-  Ct <- 630.2023 * 5# ng/g PCB 4 sediment concentration
+  Ct <- 630.2023# ng/g PCB 4 sediment concentration
+  Mt <- Ct * 10 # [ng]
   foc <- 0.03 # organic carbon % in sediment
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
   dUow <- -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
@@ -57,10 +77,11 @@ rtm.PCB4 = function(t, state, parms){
   K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   M <- 0.1 # kg/L solid-water ratio
   Cw0 <- Ct * M * 1000 / (1 + M * K)
+  Cs0 <- Ct * M * 1000 # [ng/L]
 }
 
-cinit <- c(Cs = 0, Cw = Cw0, mf = 0)
-parms <- list(kr = 0.01, f = 0.6, ka = 0.03, ko = 10) # Input 
+cinit <- c(Cs = Cs0, Cw = 0, mf = 0)
+parms <- list(kr = 0.1, f = 1, ka = 0.1, ko = 10) # Input 
 t.1 <- seq(from = 0, to = 75, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
@@ -71,18 +92,20 @@ df <- as.data.frame(out.1)
 colnames(df) <- c("time", "Cs", "Cw", "mf")
 
 # Add a new column for the total concentration
-df$Ctotal <- df$Cs + df$Cw
+Vw <- 100 # [cm3]
+
+df$Mtotal <- df$Cs * Vw / 1000 + df$Cw * Vw / 1000 + df$mf
 
 # Create the plot with all three lines
 ggplot(data = df, aes(x = time)) +
-  geom_line(aes(y = Cs, color = "Sediment (Cs)"), size = 1) +       # Line for Cs
-  geom_line(aes(y = Cw, color = "Water (Cw)"), size = 1) +          # Line for Cw
-  geom_line(aes(y = Ctotal, color = "Total (Ctotal)"), size = 1) +  # Line for total concentration Cs + Cw
+  geom_line(aes(y = Cs * Vw / 1000, color = "Sediment (Cs)"), size = 1) +       # Line for Cs
+  geom_line(aes(y = Cw *Vw / 1000, color = "Water (Cw)"), size = 1) +          # Line for Cw
+  geom_line(aes(y = Mtotal, color = "Total (Ctotal)"), size = 1) +  # Line for total concentration Cs + Cw
   labs(title = "Concentrations vs Time", 
        x = "Time", 
-       y = "Concentration (ng/L)") +
+       y = "Mass (ng)") +
   scale_color_manual(values = c("Sediment (Cs)" = "blue", "Water (Cw)" = "red",
-                                "Total (Ctotal)" = "purple"),
+                                "Total (Mtotal)" = "purple"),
                      name = "Concentrations") +
   theme_minimal()
 
