@@ -159,8 +159,7 @@ rtm.PCB4 = function(t, state, parms){
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
   
   # Sorption and desorption rates
-  kf <- parms$kf # 1/d
-  ks <- parms$ks # 1/d
+  kd <- parms$kd # 1/d
   f <- parms$f # fraction
   ka <- parms$ka # 1/d
   
@@ -174,9 +173,9 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
-  dCsdt <- Cs * (f * exp(-kf * t) + (1 - f) * exp(-ks * t))
-  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) +  Cw * K * M * (kf * f + ks * (1 - f)) - ka * Cw - kb * Cw - ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)) )/ B # Ca in [ng/L]
-  dmfdt <- ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
+  dCsdt <- - Cs * kd * f + ka * Cw
+  dCwdt <- (kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) +  Cs * f * kd - ka * Cw - kb * Cw - ko * Af * L / 1000 * (Cw - mf / (Vf * L * Kf)))  # Ca in [ng/L]
+  dmfdt <- ko * Af * Vw / (Vf * 10000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
   
@@ -187,7 +186,7 @@ rtm.PCB4 = function(t, state, parms){
 # Initial conditions and run function
 {
   # Estimating Cpw (PCB 4 concentration in sediment porewater)
-  Ct <- 630.2023 * 1 # ng/g PCB 4 sediment concentration
+  Ct <- 630.2023 * 5 # ng/g PCB 4 sediment concentration
   foc <- 0.03 # organic carbon % in sediment
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
   dUow <- -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
@@ -200,14 +199,32 @@ rtm.PCB4 = function(t, state, parms){
   logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
   K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   M <- 0.1 # kg/L solid-water ratio
-  Cwi <- Ct * M * 1000 / (1 + M * K)
+  Cw0 <- Ct * M * 1000 / (1 + M * K) # ng/L
 }
-cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.0045, ko = 1, kb = 0.0, kf = 1.3, ks = 0.01, f = 0.6, ka = 400) # Input 
+cinit <- c(Cw = Cw0, Cs = 0, mf = 0, Ca = 0, mpuf = 0)
+parms <- list(ro = 0.0045, ko = 10, kb = 0.0, kd = 0.01, f = 0.6, ka = 0.03) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
+
+df <- as.data.frame(out.1)
+colnames(df) <- c("time", "Cs", "Cw")
+df$Ctotal <- df$Cs + df$Cw
+
+# Create the plot with all three lines
+ggplot(data = df, aes(x = time)) +
+  geom_line(aes(y = Cs, color = "Sediment (Cs)"), size = 1) +       # Line for Cs
+  geom_line(aes(y = Cw, color = "Water (Cw)"), size = 1) +          # Line for Cw
+  geom_line(aes(y = Ctotal, color = "Total (Ctotal)"), size = 1) +  # Line for total concentration Cs + Cw
+  labs(title = "Concentrations vs Time", 
+       x = "Time", 
+       y = "Concentration (ng/L)") +
+  scale_color_manual(values = c("Sediment (Cs)" = "blue", "Water (Cw)" = "red",
+                                "Total (Ctotal)" = "purple"),
+                     name = "Concentrations") +
+  theme_minimal()
+
 
 # Ensure observed data is in a tibble
 observed_data <- as_tibble(pcb_combined_control) %>%
@@ -256,7 +273,7 @@ print(paste("R-squared for mpuf (average): ", mpuf_r2_value))
 
 # Plot
 # Run the model with the new time sequence
-cinit <- c(Cw = Cwi, mf = 0, Ca = 0, mpuf = 0)
+cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 t_daily <- seq(0, 40, by = 1)  # Adjust according to your needs
 out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4, parms = parms)
 
@@ -268,7 +285,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4SControl.csv")
+#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4SControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
