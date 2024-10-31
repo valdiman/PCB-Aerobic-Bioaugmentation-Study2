@@ -91,21 +91,16 @@ head(out.1)
 df <- as.data.frame(out.1)
 colnames(df) <- c("time", "Cs", "Cw", "mf")
 
-# Add a new column for the total concentration
-Vw <- 100 # [cm3]
-
-df$Mtotal <- df$Cs * Vw / 1000 + df$Cw * Vw / 1000 + df$mf
-
 # Create the plot with all three lines
 ggplot(data = df, aes(x = time)) +
-  geom_line(aes(y = Cs * Vw / 1000, color = "Sediment (Cs)"), size = 1) +       # Line for Cs
-  geom_line(aes(y = Cw *Vw / 1000, color = "Water (Cw)"), size = 1) +          # Line for Cw
-  geom_line(aes(y = Mtotal, color = "Total (Ctotal)"), size = 1) +  # Line for total concentration Cs + Cw
+  geom_line(aes(y = Cs, color = "Sediment (Cs)"), size = 1) +       # Line for Cs
+  geom_line(aes(y = Cw, color = "Water (Cw)"), size = 1) +          # Line for Cw
+  geom_line(aes(y = Cs + Cw, color = "Total (Ctotal)"), size = 1) +  # Line for total concentration Cs + Cw
   labs(title = "Concentrations vs Time", 
        x = "Time", 
        y = "Mass (ng)") +
   scale_color_manual(values = c("Sediment (Cs)" = "blue", "Water (Cw)" = "red",
-                                "Total (Mtotal)" = "purple"),
+                                "Total (Ctotal)" = "purple"),
                      name = "Concentrations") +
   theme_minimal()
 
