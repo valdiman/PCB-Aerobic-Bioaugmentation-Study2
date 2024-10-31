@@ -32,7 +32,7 @@ rtm.PCB4 = function(t, state, parms){
   Cw <- state[2]
   
   # Determine the desorption rate based on time
-  if (t <= 5) {  # If t is less than or equal to 5 day
+  if (t <= 1) {  # If t is less than or equal to 5 day
     # Use fast desorption
     dCsdt <- - (f * kdf * Cs) + ka * Cw
   } else {
@@ -41,23 +41,25 @@ rtm.PCB4 = function(t, state, parms){
   }
   
   # Derivative for water concentration
-  dCwdt <- - ka * Cw + (f * kdf * Cs * (t <= 5)) + ((1 - f) * kds * Cs * (t > 5))
+  dCwdt <- - ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1))
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt)))
 }
 
 cinit <- c(Cs = 63020.23, Cw = 0)
-parms <- list(kdf = 1, kds = 0.5, f = 0.8, ka = 0.2) # Input 
+parms <- list(kdf = 0.5, kds = 0.000001, f = 0.6, ka = 0.03) # Input 
 t.1 <- seq(from = 0, to = 75, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
 
 # Assuming out.1 is your data matrix
-df <- as.data.frame(out.1)
-colnames(df) <- c("time", "Cs", "Cw")
-df$Ct <- df$Cs + df$Cw
+{
+  df <- as.data.frame(out.1)
+  colnames(df) <- c("time", "Cs", "Cw")
+  df$Ct <- df$Cs + df$Cw
+}
 
 # Create the plot with all three lines
 ggplot(data = df, aes(x = time)) +
