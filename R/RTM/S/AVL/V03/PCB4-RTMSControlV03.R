@@ -196,21 +196,9 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 {
-  # Estimating Cpw (PCB 4 concentration in sediment porewater)
+  # Estimating Cs0 (PCB 4 concentration in particles)
   Ct <- 630.2023 # ng/g PCB 4 sediment concentration
-  foc <- 0.03 # organic carbon % in sediment
-  Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
-  dUow <- -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
-  R <- 8.3144 # J/(mol K) molar gas constant
-  Tst <- 25 #C air temperature
-  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
-  Tw <- 20 # C water temperature
-  Tw.1 <- 273.15 + Tw
-  Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   M <- 0.1 # kg/L solid-water ratio
-  Cw0 <- Ct * M * 1000 / (1 + M * K) # ng/L
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)

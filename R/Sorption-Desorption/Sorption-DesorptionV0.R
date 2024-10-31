@@ -21,15 +21,40 @@ install.packages("gridExtra")
 # Reactive transport function ---------------------------------------------
 rtm.PCB4 = function(t, state, parms){
   
+  # Experimental conditions
+  R <- 8.3144 # J/(mol K) molar gas constant
+  Tst <- 25 #C air temperature
+  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
+  Tw <- 20 # C water temperature
+  Tw.1 <- 273.15 + Tw
+  
+  # Congener-specific constants
+  Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
+  dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
+  
+  # Sediment partitioning
+  foc <- 0.03 # organic carbon % in particles
+  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  
   # Sorption and desorption rates
   kdf <- parms$kdf # 1/d
   kds <- parms$kds # 1/d
   f <- parms$f # fraction
   ka <- parms$ka # 1/d
   
+  # Bioremediation rate
+  kb <- parms$kb
+  
   # derivatives dx/dt are computed below
   Cs <- state[1]
   Cw <- state[2]
+  
+  # Calculate Cw0 from Cs0 and Kd if t == 1 (first time step)
+  if (t == 1) {
+    Cw <- (Cs / K) * exp(-kb * t)
+  }
   
   # Determine the desorption rate based on time
   if (t <= 1) {  # If t is less than or equal to 5 day
@@ -47,8 +72,10 @@ rtm.PCB4 = function(t, state, parms){
   return(list(c(dCsdt, dCwdt)))
 }
 
-cinit <- c(Cs = 63020.23, Cw = 0)
-parms <- list(kdf = 0.5, kds = 0.000001, f = 0.6, ka = 0.03) # Input 
+# Parameters and initial state
+parms <- list(kdf = 1, kds = 0.0001, f = 0.6, ka = 0.05, kb = 0.02)
+Cw0 <- (cinit["Cs"] / K) * exp(-parms$kb * 1)
+cinit <- c(Cs = 63020.23, Cw = Cw0)
 t.1 <- seq(from = 0, to = 75, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)

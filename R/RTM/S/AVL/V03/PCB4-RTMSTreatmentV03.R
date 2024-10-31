@@ -158,7 +158,8 @@ rtm.PCB4 = function(t, state, parms){
   kb <- parms$kb
   
   # Sorption and desorption rates
-  kr <- parms$kr # 1/d
+  kdf <- parms$kdf # 1/d
+  kds <- parms$kds # 1/d
   f <- parms$f # fraction
   ka <- parms$ka # 1/d
   
@@ -178,8 +179,18 @@ rtm.PCB4 = function(t, state, parms){
   #  kb <- 0.58
   #}
   
-  dCsdt <- - Cs * kr * f + ka * Cw
-  dCwdt <- - ka * Cw +  Cs * kr * f - (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) + kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw
+  # Determine the desorption rate based on time
+  if (t <= 1) {  # If t is less than or equal to 5 day
+    # Use fast desorption
+    dCsdt <- - (f * kdf * Cs) + ka * Cw
+  } else {
+    # Use slow desorption
+    dCsdt <- - ((1 - f) * kds * Cs) + ka * Cw
+  }
+  
+  dCwdt <- (- ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
+              (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) +
+              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw) / 1
   dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -190,8 +201,8 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 {
-  # Estimating Cpw (PCB 4 concentration in sediment porewater)
-  Ct <- 630.2023 * 3 # ng/g PCB 4 sediment concentration
+  # Estimating Cs0 (PCB 4 concentration in particles)
+  Ct <- 630.2023 # ng/g PCB 4 sediment concentration
   foc <- 0.03 # organic carbon % in sediment
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
   dUow <- -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
@@ -204,12 +215,15 @@ rtm.PCB4 = function(t, state, parms){
   logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
   K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   M <- 0.1 # kg/L solid-water ratio
-  Cw0 <- Ct * M * 1000 / (1 + M * K) # ng/L
-  #kb <- 0.58
-  #Cw0 <- Cw0 *exp(-kb * 4)
+  Cwi <- Ct * M * 1000 / (1 + M * K)
+  kb <- 0.58
+  Cwi <- Cwi * exp(-kb * 3.8)
+  Ct <- Cwi * (1 + M* K) / (M *1000)
+  Cs0 <- Ct * M * 1000 # [ng/L]
 }
-cinit <- c(Cs = 0, Cw = Cw0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.00045, ko = 1, kr = 0.000001, f = 0.6, ka = 0.02, kb = 0) # Input 
+cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
+parms <- list(ro = 0.0004, ko = 1, kdf = 0.05, kds = 0.00001, f = 0.6,
+              ka = 0.03, kb = 0) # Input 
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
@@ -262,7 +276,7 @@ print(paste("R-squared for mpuf (average): ", mpuf_r2_value))
 
 # Plot
 # Run the model with the new time sequence
-cinit <- c(Cs = 0, Cw = Cw0, mf = 0, Ca = 0, mpuf = 0)
+cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 t_daily <- seq(0, 40, by = 1)  # Adjust according to your needs
 out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4, parms = parms)
 
