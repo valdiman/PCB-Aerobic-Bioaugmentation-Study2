@@ -51,31 +51,26 @@ rtm.PCB4 = function(t, state, parms){
   Cs <- state[1]
   Cw <- state[2]
   
-  # Calculate Cw0 from Cs0 and Kd if t == 1 (first time step)
-  if (t == 1) {
-    Cw <- (Cs / K) * exp(-kb * t)
-  }
-  
   # Determine the desorption rate based on time
-  if (t <= 1) {  # If t is less than or equal to 5 day
+  # Sorption start after day 2
+  if (t <= 1) {  # If t is less than or equal to 1 day
     # Use fast desorption
-    dCsdt <- - (f * kdf * Cs) + ka * Cw
+    dCsdt <- - (f * kdf * Cs)
   } else {
     # Use slow desorption
     dCsdt <- - ((1 - f) * kds * Cs) + ka * Cw
   }
   
   # Derivative for water concentration
-  dCwdt <- - ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1))
+  dCwdt <- - ka * Cw * (t > 1) + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1))
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt)))
 }
 
 # Parameters and initial state
-parms <- list(kdf = 1, kds = 0.0001, f = 0.6, ka = 0.05, kb = 0.02)
-Cw0 <- (cinit["Cs"] / K) * exp(-parms$kb * 1)
-cinit <- c(Cs = 63020.23, Cw = Cw0)
+parms <- list(kdf = 1, kds = 0.001, f = 0.6, ka = 0.1, kb = 0.0)
+cinit <- c(Cs = 63020.23, Cw = 0)
 t.1 <- seq(from = 0, to = 75, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)

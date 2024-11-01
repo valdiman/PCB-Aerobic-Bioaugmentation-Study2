@@ -174,13 +174,8 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
-  # new kb works before 3 days
-  #if (t < 5) {
-  #  kb <- 0.58
-  #}
-  
   # Determine the desorption rate based on time
-  if (t <= 1) {  # If t is less than or equal to 5 day
+  if (t <= 1) {  # If t is less than or equal to 1 day
     # Use fast desorption
     dCsdt <- - (f * kdf * Cs) + ka * Cw
   } else {

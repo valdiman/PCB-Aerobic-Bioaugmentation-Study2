@@ -261,23 +261,6 @@ t_daily <- seq(0, 40, by = 1)  # Adjust according to your needs
 out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4, parms = parms)
 head(out_daily)
 
-# Check behavior of CS and Cw
-out_daily <- as_tibble(out_daily)
-
-# Melt the data for ggplot, focusing only on Cs and Cw
-out_daily_melted <- melt(out_daily, id.vars = "time", measure.vars = c("Cs", "Cw"),
-                         variable.name = "Concentration", value.name = "Value")
-
-# Create the plot
-ggplot(out_daily_melted, aes(x = time, y = Value, color = Concentration)) +
-  geom_line() +
-  geom_point() +
-  labs(title = "Concentrations of Cs and Cw Over Time",
-       x = "Time (days)",
-       y = "Concentration",
-       color = "Concentration Type") +
-  theme_minimal()
-
 # Convert model results to tibble and ensure numeric values
 model_results_daily_clean <- as_tibble(out_daily) %>%
   rename(mf = `mf`, mpuf = `mpuf`) %>%
@@ -286,7 +269,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4SControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4SControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
