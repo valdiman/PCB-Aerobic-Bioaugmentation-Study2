@@ -151,9 +151,6 @@ rtm.PCB4 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * L * 1000 + Va * Kaw.t) / Vw
-  
   # Bioremediation rate
   kb <- parms$kb
   
@@ -183,9 +180,9 @@ rtm.PCB4 = function(t, state, parms){
     dCsdt <- - ((1 - f) * kds * Cs) + ka * Cw
   }
   
-  dCwdt <- (- ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
+  dCwdt <- - ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
               (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) +
-              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw) / 1
+              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw
   dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -283,7 +280,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4STreatment.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4STreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%

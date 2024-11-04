@@ -186,7 +186,7 @@ rtm.PCB52 = function(t, state, parms){
   
   dCwdt <- - ka * Cw  + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
     (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) +
-    kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw
+    kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw / B
   dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -269,7 +269,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB52AVLSControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB52AVLSControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%

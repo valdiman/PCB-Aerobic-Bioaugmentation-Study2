@@ -183,9 +183,9 @@ rtm.PCB52 = function(t, state, parms){
     dCsdt <- - ((1 - f) * kds * Cs) + ka * Cw
   }
   
-  dCwdt <- (- ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
+  dCwdt <- - ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
               (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) +
-              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw) / 1
+              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw / B
   dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -216,9 +216,15 @@ rtm.PCB52 = function(t, state, parms){
   Ct <- Cwi * (1 + M* K) / (M *1000)
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
+
+{
+  Ct <- 321.4900673 # ng/g PCB 52 sediment concentration
+  M <- 0.1 # kg/L solid-water ratio
+  Cs0 <- Ct * M * 1000 # [ng/L]
+}
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 0.0004, ko = 1, kdf = 0.0025, kds = 0.00005, f = 0.6,
-              ka = 0.015, kb = 0) # Input
+              ka = 0.015, kb = 0.088) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB52, parms = parms)

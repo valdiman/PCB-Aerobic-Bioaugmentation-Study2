@@ -268,7 +268,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSControl.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%

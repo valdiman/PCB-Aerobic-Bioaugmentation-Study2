@@ -62,14 +62,14 @@ rtm.PCB4 = function(t, state, parms){
   }
   
   # Derivative for water concentration
-  dCwdt <- - ka * Cw * (t > 1) + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1))
+  dCwdt <- - ka * Cw * (t > 1) + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) - kb * Cw
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt)))
 }
 
 # Parameters and initial state
-parms <- list(kdf = 1, kds = 0.001, f = 0.6, ka = 0.1, kb = 0.0)
+parms <- list(kdf = 0.003, kds = 0.00006, f = 0.6, ka = 0.015, kb = 0)
 cinit <- c(Cs = 63020.23, Cw = 0)
 t.1 <- seq(from = 0, to = 75, by = 1)
 # Run the ODE function without specifying parms
@@ -85,14 +85,15 @@ head(out.1)
 
 # Create the plot with all three lines
 ggplot(data = df, aes(x = time)) +
-  geom_line(aes(y = Cs, color = "Sediment (Cs)"), size = 1) +       # Line for Cs
-  geom_line(aes(y = Cw, color = "Water (Cw)"), size = 1) +          # Line for Cw
-  geom_line(aes(y = Ct, color = "Total (Ctotal)"), size = 1) +  # Line for total concentration Cs + Cw
+  geom_line(aes(y = Cs, color = "Sediment (Cs)"), linewidth = 1) +       # Line for Cs
+  geom_line(aes(y = Cw, color = "Water (Cw)"), linewidth = 1) +          # Line for Cw
+  geom_line(aes(y = Ct, color = "Total (Ctotal)"), linewidth = 1) +  # Line for total concentration Cs + Cw
   labs(title = "Concentrations vs Time", 
        x = "Time", 
        y = "Mass (ng)") +
   scale_color_manual(values = c("Sediment (Cs)" = "blue", "Water (Cw)" = "red",
                                 "Total (Ctotal)" = "purple"),
                      name = "Concentrations") +
-  theme_minimal()
+  theme_minimal() +
+  ylim(0, 300)
 
