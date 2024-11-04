@@ -151,6 +151,9 @@ rtm.PCB4 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
+  # Bioavailability factor B
+  B <- (Vw + M * Vw * K + Vf * L * 1000 + Va * Kaw.t) / Vw
+  
   # Bioremediation rate
   kb <- parms$kb
   
@@ -182,7 +185,7 @@ rtm.PCB4 = function(t, state, parms){
   
   dCwdt <- - ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
               (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) +
-              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw
+              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw / 1
   dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -213,6 +216,7 @@ rtm.PCB4 = function(t, state, parms){
   Ct <- Cwi * (1 + M* K) / (M *1000)
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
+
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 0.0004, ko = 1, kdf = 0.05, kds = 0.00001, f = 0.6,
               ka = 0.03, kb = 0) # Input 
