@@ -56,19 +56,22 @@ rtm.PCB4 = function(t, state, parms){
   Cs <- state[1]
   Cw <- state[2]
   
-  
   # Derivative for water concentration
   
+  dCsdt <- (- (f * kdf * Cs * (t <= 2)) - ((1 - f) * kds * Cs * (t > 2)) +
+              ka * Cw ) / B
+  dCwdt <- (- ka * Cw + (f * kdf * Cs * (t <= 2)) + (1 - f) * kds * Cs * (t < 2) -
+              kb * Cw^2) / B
   
-  dCsdt <- (- (f * kdf * Cs) - ((1 - f) * kds * Cs) + ka * Cw) / 1
-  dCwdt <- (- ka * Cw + (f * kdf * Cs) + ((1 - f) * kds * Cs) - kb * Cw * (t <5)) / 1
+  #dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B
+  #dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs - kb * Cw) / B
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt)))
 }
 
 # Parameters and initial state
-parms <- list(kdf = 1.5, kds = 0.06, f = 0.6, ka = 1, kb = 0.1)
+parms <- list(kdf = 5, kds = 0.01, f = 0.6, ka = 0.1, kb = 0.5)
 cinit <- c(Cs = 63020.23, Cw = 0)
 t.1 <- seq(from = 0, to = 75, by = 1)
 # Run the ODE function without specifying parms
