@@ -62,7 +62,8 @@ objective_function <- function(params) {
   times <- seq(0, 100, by = 1)
   
   # Solve the system of equations
-  solution <- ode(y = initial_conditions, times = times, func = system_equations, parms = NULL, method = "lsoda")
+  solution <- ode(y = initial_conditions, times = times, func = system_equations,
+                  parms = NULL, method = "lsoda")
   solution_df <- as.data.frame(solution)
   
   # Interpolate predicted values at the observation times
