@@ -21,34 +21,18 @@ install.packages("gridExtra")
 # Reactive transport function ---------------------------------------------
 rtm.PCB4 = function(t, state, parms){
   
-  # Experimental conditions
-  R <- 8.3144 # J/(mol K) molar gas constant
-  Tst <- 25 #C air temperature
-  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
-  Tw <- 20 # C water temperature
-  Tw.1 <- 273.15 + Tw
-  
-  # Congener-specific constants
-  Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
-  dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
-  
-  # Sediment partitioning
-  foc <- 0.03 # organic carbon % in particles
-  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  K <- 2128 # L/kg
   M <- 0.1 # kg/L
+  
+  # Bioavailability factor B
+  Vw <- 100 # cm3
+  B <- (Vw + M * Vw * K) / Vw
   
   # Sorption and desorption rates
   kdf <- parms$kdf # 1/d
   kds <- parms$kds # 1/d
   f <- parms$f # fraction
   ka <- parms$ka # 1/d
-  
-  # Bioavailability factor B
-  Vw <- 100 # cm3
-  B <- (Vw + M * Vw * K) / Vw
-  
   # Bioremediation rate
   kb <- parms$kb
   
@@ -57,23 +41,17 @@ rtm.PCB4 = function(t, state, parms){
   Cw <- state[2]
   
   # Derivative for water concentration
-  
-  dCsdt <- (- (f * kdf * Cs * (t <= 2)) - ((1 - f) * kds * Cs * (t > 2)) +
-              ka * Cw ) / B
-  dCwdt <- (- ka * Cw + (f * kdf * Cs * (t <= 2)) + (1 - f) * kds * Cs * (t < 2) -
-              kb * Cw^2) / B
-  
-  #dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B
-  #dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs - kb * Cw) / B
+  dCsdt <- (- f * kdf * Cs * as.numeric(t<=1) - (1 - f) * kds * Cs * as.numeric(t>1) + ka * Cw) / B
+  dCwdt <- (- ka * Cw + f * kdf * Cs * as.numeric(t<=1) + (1 - f) * kds * Cs * as.numeric(t>1) - kb * Cw * as.numeric(t <=10)) / B
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt)))
 }
 
 # Parameters and initial state
-parms <- list(kdf = 5, kds = 0.01, f = 0.6, ka = 0.1, kb = 0.5)
+parms <- list(kdf = 100, kds = 0.1, f = 0.6, ka = 1, kb = 0.5)
 cinit <- c(Cs = 63020.23, Cw = 0)
-t.1 <- seq(from = 0, to = 75, by = 1)
+t.1 <- seq(from = 0, to = 50, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
