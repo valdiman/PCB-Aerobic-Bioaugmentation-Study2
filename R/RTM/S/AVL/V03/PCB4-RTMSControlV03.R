@@ -174,21 +174,13 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
-  # Determine the desorption rate based on time
-  if (t <= 1) {  # If t is less than or equal to 5 day
-    # Use fast desorption
-    dCsdt <- - (f * kdf * Cs) + ka * Cw
-  } else {
-    # Use slow desorption
-    dCsdt <- - ((1 - f) * kds * Cs) + ka * Cw
-  }
-  
-  dCwdt <- - ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
+  dCsdt <- (- (f * kdf * Cs * (t<= 1)) - (1 - f) * kds * Cs * (t>1) + ka * Cw) / B
+  dCwdt <- (- ka * Cw + f * kdf * Cs * (t<= 1)+ (1 - f) * kds * Cs * (t>1) -
               (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) +
-              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw / B
-  dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
-  dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
-  dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
+              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw) / B
+  dmfdt <- (ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf))) / B # Cw = [ng/L], mf = [ng/cmf]
+  dCadt <- (kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)) / B
+  dmpufdt <- (ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf)) / B # Ca = [ng/L], mpuf = [ng]
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt, dmfdt, dCadt, dmpufdt)))
@@ -202,8 +194,8 @@ rtm.PCB4 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.0004, ko = 1, kdf = 0.05, kds = 0.00001, f = 0.6,
-              ka = 0.03, kb = 0) # Input 
+parms <- list(ro = 0.07, ko = 0.001, kdf = 12, kds = 0.5, f = 0.6,
+              ka = 15, kb = 0) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)

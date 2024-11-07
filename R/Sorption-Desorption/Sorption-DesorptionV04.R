@@ -41,26 +41,27 @@ rtm.PCB4 = function(t, state, parms){
   Cw <- state[2]
   
   # Derivative for water concentration
-  dCsdt <- (- f * kdf * Cs * as.numeric(t<=1) - (1 - f) * kds * Cs * as.numeric(t>1) + ka * Cw) / B
-  dCwdt <- (- ka * Cw + f * kdf * Cs * as.numeric(t<=1) + (1 - f) * kds * Cs * as.numeric(t>1) - kb * Cw * as.numeric(t <=10)) / B
+  dCsdt <- (- f * kdf * Cs * (t<= 1) - (1 - f) * kds * Cs * (t>1) + ka * Cw) / B
+  dCwdt <- (- ka * Cw + f * kdf * Cs * (t<= 1) + (1 - f) * kds * Cs * (t>1) - kb * Cw) / B
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt)))
 }
 
 # Parameters and initial state
-parms <- list(kdf = 100, kds = 0.1, f = 0.6, ka = 1, kb = 0.5)
+parms <- list(kdf = 4, kds = 0.05, f = 0.6, ka = 2, kb = 0)
 cinit <- c(Cs = 63020.23, Cw = 0)
 t.1 <- seq(from = 0, to = 50, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
 
-# Assuming out.1 is your data matrix
 {
   df <- as.data.frame(out.1)
   colnames(df) <- c("time", "Cs", "Cw")
-  df$Ct <- df$Cs + df$Cw
+  df$Mt <- (df$Cs + df$Cw) * Vw / 1000 # [ng]
+  df$fP <- (df$Cs * Vw / 1000) / df$Mt # [ng]
+  df$fd <- (df$Cw * Vw / 1000) / df$Mt # [ng]
 }
 
 # Create the plot with all three lines
