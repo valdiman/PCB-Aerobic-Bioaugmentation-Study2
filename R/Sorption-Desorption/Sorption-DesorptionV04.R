@@ -25,7 +25,7 @@ rtm.PCB4 = function(t, state, parms){
   M <- 0.1 # kg/L
   
   # Bioavailability factor B
-  Vw <- 100 # cm3
+  Vw <- 10 # cm3
   B <- (Vw + M * Vw * K) / Vw
   
   # Sorption and desorption rates
@@ -41,15 +41,18 @@ rtm.PCB4 = function(t, state, parms){
   Cw <- state[2]
   
   # Derivative for water concentration
-  dCsdt <- (- f * kdf * Cs * (t<= 1) - (1 - f) * kds * Cs * (t>1) + ka * Cw) / B
-  dCwdt <- (- ka * Cw + f * kdf * Cs * (t<= 1) + (1 - f) * kds * Cs * (t>1) - kb * Cw) / B
+  #dCsdt <- (- f * kdf * Cs * (t<= 1) - (1 - f) * kds * Cs * (t>1) + ka * Cw) / B
+  #dCwdt <- (- ka * Cw + f * kdf * Cs * (t<= 1) + (1 - f) * kds * Cs * (t>1) - kb * Cw) / B
+  
+  dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B
+  dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs - kb * Cw) / B
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt)))
 }
 
 # Parameters and initial state
-parms <- list(kdf = 4, kds = 0.05, f = 0.6, ka = 2, kb = 0)
+parms <- list(kdf = 500, kds = 0.1, f = 0.6, ka = 200, kb = 0) # Input 
 cinit <- c(Cs = 63020.23, Cw = 0)
 t.1 <- seq(from = 0, to = 50, by = 1)
 # Run the ODE function without specifying parms
@@ -59,6 +62,8 @@ head(out.1)
 {
   df <- as.data.frame(out.1)
   colnames(df) <- c("time", "Cs", "Cw")
+  df$Ct <- df$Cs + df$Cw
+  Vw <- 10 #[cm3]
   df$Mt <- (df$Cs + df$Cw) * Vw / 1000 # [ng]
   df$fP <- (df$Cs * Vw / 1000) / df$Mt # [ng]
   df$fd <- (df$Cw * Vw / 1000) / df$Mt # [ng]
@@ -76,4 +81,5 @@ ggplot(data = df, aes(x = time)) +
                                 "Total (Ctotal)" = "purple"),
                      name = "Concentrations") +
   theme_minimal()
+  ylim(10000, 65000)
 
