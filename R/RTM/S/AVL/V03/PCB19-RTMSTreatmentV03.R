@@ -112,6 +112,7 @@ rtm.PCB19 = function(t, state, parms){
   Koa <- 10^(6.763554861) # PCB 19 octanol-air equilibrium partition coefficient
   
   # PUF constants 
+  Apuf <- 7.07 # cm2
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
@@ -152,7 +153,7 @@ rtm.PCB19 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * L * 1000) / Vw
+  B <- (Vw + M * Vw * K + Vf * L * 1000 + Va * Kaw.t) / Vw
   
   # Bioremediation rate
   kb <- parms$kb
@@ -164,8 +165,8 @@ rtm.PCB19 = function(t, state, parms){
   ka <- parms$ka # 1/d
   
   # Passive sampler rates
-  ro <- parms$ro # m3/d sampling rate for PUF
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
+  ro <- parms$ro # cm/d sampling rate for PUF
   
   # derivatives dx/dt are computed below
   Cs <- state[1]
@@ -173,22 +174,16 @@ rtm.PCB19 = function(t, state, parms){
   mf <- state[3]
   Ca <- state[4]
   mpuf <- state[5]
-
-  # Determine the desorption rate based on time
-  if (t <= 1) {  # If t is less than or equal to 5 day
-    # Use fast desorption
-    dCsdt <- - (f * kdf * Cs) + ka * Cw
-  } else {
-    # Use slow desorption
-    dCsdt <- - ((1 - f) * kds * Cs) + ka * Cw
-  }
   
-  dCwdt <- (- ka * Cw + (f * kdf * Cs * (t <= 1)) + ((1 - f) * kds * Cs * (t > 1)) -
-              (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) +
-              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw) / 1
-  dmfdt <- ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf)) # Cw = [ng/L], mf = [ng/cmf]
-  dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
-  dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
+  dCsdt <- (- f * kdf * Cs * (t <=1) - (1 - f) * kds * Cs  * (t > 1)+ ka * Cw) / B # [ng/L]
+  dCwdt <- (- ka * Cw + f * kdf * Cs * (t <=1)+ (1 - f) * kds * Cs * (t >1)-
+              kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
+              ko * Af / (Vf * 1000) * (Cw - mf / (Vf * Kf)) -
+              kb * Cw) / B # [ng/L]
+  dmfdt <- (ko * Af * Vw / (Vf * 1000 * 1000) * (Cw - mf / (Vf * Kf))) / B # Cw = [ng/L], mf = [ng/cmf]
+  dCadt <- (kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
+              ro * Apuf / (Vpuf * 10^6) * (Ca - mpuf / (Vpuf * d * Kpuf * 1000)))/ B # Ca = [ng/L]
+  dmpufdt <- (ro * Apuf * Va/ (Vpuf * 10^9) * (Ca - mpuf / (Vpuf * d * Kpuf * 1000))) / B # Ca = [ng/L], mpuf = [ng]
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt, dmfdt, dCadt, dmpufdt)))
@@ -198,27 +193,12 @@ rtm.PCB19 = function(t, state, parms){
 {
   # Estimating Cpw (PCB 19 concentration in sediment porewater)
   Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
-  foc <- 0.03 # organic carbon % in sediment
-  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
-  dUow <-  -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
-  R <- 8.3144 # J/(mol K) molar gas constant
-  Tst <- 25 #C air temperature
-  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
-  Tw <- 20 # C water temperature
-  Tw.1 <- 273.15 + Tw
-  Kow.t <- Kow*exp(-dUow/R*(1/Tw.1-1/Tst.1))
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   M <- 0.1 # kg/L solid-water ratio
-  Cwi <- Ct * M * 1000 / (1 + M * K)
-  kb <- 0.041
-  Cwi <- Cwi * exp(-kb * 5.4)
-  Ct <- Cwi * (1 + M* K) / (M *1000)
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.0004, ko = 1, kdf = 0.022, kds = 0.0008, f = 0.6,
-              ka = 0.04, kb = 0) # Input
+parms <- list(ro = 15000, ko = 1, kdf = 10, kds = 0.4, f = 0.6,
+              ka = 0.7, kb = 0) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
@@ -283,7 +263,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSTreatment.csv")
+#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
