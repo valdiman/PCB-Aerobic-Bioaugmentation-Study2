@@ -72,9 +72,12 @@ p.kb <- ggplot(fitted_data, aes(x = time, y = concentration, color = PCB)) +
   geom_line(aes(y = fitted_concentration), linetype = "dashed") +
   labs(title = "One-Phase Decay Model for Each PCB",
        x = "Time", y = "Concentration") +
-  theme_minimal() +
+  theme_bw() +
   scale_color_discrete(name = "PCB")
 
+# see plot
+p.kb
+
 # Save plot in folder
-ggsave("Output/Plots/General/kb.png", plot = p.kb, width = 15,
-       height = 5, dpi = 500)
+ggsave("Output/Plots/General/kb.png", plot = p.kb, width = 10,
+       height = 8, dpi = 500)
