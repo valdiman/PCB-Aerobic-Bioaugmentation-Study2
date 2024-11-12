@@ -111,7 +111,8 @@ rtm.PCB4 = function(t, state, parms){
   dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
   Koa <- 10^(6.521554861) # PCB 4 octanol-air equilibrium partition coefficient
   
-  # PUF constants 
+  # PUF constants
+  Apuf <- 7.07 # cm2
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
@@ -126,7 +127,7 @@ rtm.PCB4 = function(t, state, parms){
   M <- 0.1 # kg/L solid-water ratio
   foc <- 0.03 # organic carbon % in particles
   Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
-  logKoc <- 0.94 * log10(Kow) + 0.42 # koc calculation
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
   K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   
   # Air & water physical conditions
@@ -164,8 +165,8 @@ rtm.PCB4 = function(t, state, parms){
   ka <- parms$ka # 1/d
   
   # Passive sampler rates
-  ro <- parms$ro # m3/d sampling rate for PUF
   ko <- parms$ko # cm/d mass transfer coefficient to SPME
+  ro <- parms$ro # cm/d sampling rate for PUF
   
   # derivatives dx/dt are computed below
   Cs <- state[1]
@@ -176,11 +177,13 @@ rtm.PCB4 = function(t, state, parms){
   
   dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B
   dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
-              (ko * Af / (Vf * L * 1000) * (Cw - mf / (Vf * Kf))) +
-              kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) - kb * Cw) / B
-  dmfdt <- (ko * Af * Vw / (Vf * L * 1000 * 1000) * (Cw - mf / (Vf * Kf))) / B # Cw = [ng/L], mf = [ng/cmf]
-  dCadt <- (kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)) / B
-  dmpufdt <- (ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf)) / B # Ca = [ng/L], mpuf = [ng]
+              kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
+              ko * Af / (Vf * 1000) * (Cw - mf / (Vf * Kf)) -
+              kb * Cw) / B # [ng/L]
+  dmfdt <- (ko * Af * Vw / (Vf * 1000 * 1000) * (Cw - mf / (Vf * Kf))) / B # Cw = [ng/L], mf = [ng/cmf]
+  dCadt <- (kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
+              ro * Apuf / (Vpuf * 10^6) * (Ca - mpuf / (Vpuf * d * Kpuf * 1000)))/ B # Ca = [ng/L]
+  dmpufdt <- (ro * Apuf * Va/ (Vpuf * 10^9) * (Ca - mpuf / (Vpuf * d * Kpuf * 1000))) / B # Ca = [ng/L], mpuf = [ng]
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt, dmfdt, dCadt, dmpufdt)))
@@ -194,8 +197,8 @@ rtm.PCB4 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 0.002, ko = 0.001, kdf = 0.5, kds = 0.0001, f = 0.6,
-              ka = 10, kb = 0) # Input 
+parms <- list(ro = 10000, ko = 1, kdf = 1, kds = 0.01, f = 0.6,
+              ka = 40, kb = 0) # Input 
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)

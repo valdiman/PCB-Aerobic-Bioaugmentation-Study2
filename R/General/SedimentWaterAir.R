@@ -101,8 +101,8 @@ SedWatAirV01 = function(t, state, parms){
   Cw <- state[2]
   Ca <- state[3]
   
-  dCsdt <- (- f * kdf * Cs * (t <=1)- (1 - f) * kds * Cs * (t >1) + ka * Cw) / B
-  dCwdt <- (- ka * Cw + f * kdf * Cs * (t <=1)+ (1 - f) * kds * Cs * (t >1) -
+  dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B
+  dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
               kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) -
               kb * Cw) / B
   dCadt <- (kaw.o * Aaw / Va * (Cw - Ca / Kaw.t))/ B # Ca = [ng/L]
@@ -119,7 +119,7 @@ SedWatAirV01 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Ca = 0) # [ng/L]
-parms <- list(kdf = 10, kds = 0.5, f = 0.6, ka = 10, kb = 0) # Input
+parms <- list(kdf = 4, kds = 0.1, f = 0.6, ka = 40, kb = 0) # Input
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t, func = SedWatAirV01, parms = parms)
@@ -146,18 +146,36 @@ ggplot(data = df.1, aes(x = time)) +
        y = "Fraction") +
   scale_color_manual(values = c("Sediment" = "blue", "Water" = "red",
                                 "Air" = "purple"),
-                     name = "Fraction") +
+                     name = "Phase") +
   theme_minimal()
 
-# Create the plot with water & air
+# Create the plot with sediment
 ggplot(data = df.1, aes(x = time)) +
-  geom_line(aes(y = Cw, color = "Water"), linewidth = 1) +          # Line for Fw
+  geom_line(aes(y = Cs, color = "Sediment"), linewidth = 1) +
+  labs(title = "Concentration vs Time", 
+       x = "Time", 
+       y = "Concentration (ng/L)") +
+  scale_color_manual(values = c("Sediment" = "blue"),
+                     name = "Phase") +
+  theme_minimal()
+
+# Create the plot with water
+ggplot(data = df.1, aes(x = time)) +
+  geom_line(aes(y = Cw, color = "Water"), linewidth = 1) +
+  labs(title = "Concentration vs Time", 
+       x = "Time", 
+       y = "Concentration (ng/L)") +
+  scale_color_manual(values = c("Water" = "red"),
+                     name = "Phase") +
+  theme_minimal()
+
+# Create the plot with air
+ggplot(data = df.1, aes(x = time)) +
   geom_line(aes(y = Ca, color = "Air"), linewidth = 1) +  # Line for Fa
   labs(title = "Concentration vs Time", 
        x = "Time", 
        y = "Concentration (ng/L)") +
-  scale_color_manual(values = c("Water" = "red", "Air" = "purple"),
-                     name = "Fraction") +
+  scale_color_manual(values = c("Air" = "purple"),
+                     name = "Phase") +
   theme_minimal()
-
 
