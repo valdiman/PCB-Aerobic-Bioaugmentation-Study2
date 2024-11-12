@@ -6,13 +6,13 @@ install.packages("tidyverse")
 install.packages("ggplot2")
 
 # Load libraries
-library(ggplot2)
-library(tidyverse)
+{
+  library(ggplot2)
+  library(tidyverse)
+}
 
 # Read data ---------------------------------------------------------------
-
 df <- read.csv("Data/kbCalculations.csv")
-
 df <- df %>%
   mutate(PCB = as.factor(PCB))
 
@@ -57,6 +57,9 @@ model_metrics <- models %>%
   ) %>%
   select(PCB, k_value, R2)
 
+# Export results
+write.csv(model_metrics, file = "Output/Data/General/kb.csv")
+
 # Extract coefficients and create fitted values
 fitted_data <- models %>%
   mutate(coef = map(model, coef)) %>%
@@ -64,12 +67,14 @@ fitted_data <- models %>%
   mutate(fitted_concentration = map2_dbl(time, coef, ~ .y["C0"] * exp(-.y["k"] * .x)))
 
 # Plot observed vs fitted data
-ggplot(fitted_data, aes(x = time, y = concentration, color = PCB)) +
+p.kb <- ggplot(fitted_data, aes(x = time, y = concentration, color = PCB)) +
   geom_point() +
   geom_line(aes(y = fitted_concentration), linetype = "dashed") +
   labs(title = "One-Phase Decay Model for Each PCB",
        x = "Time", y = "Concentration") +
   theme_minimal() +
-  scale_color_discrete(name = "PCB")  # Sets the legend title to "PCB"
+  scale_color_discrete(name = "PCB")
 
-
+# Save plot in folder
+ggsave("Output/Plots/General/kb.png", plot = p.kb, width = 15,
+       height = 5, dpi = 500)
