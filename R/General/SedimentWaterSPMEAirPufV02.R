@@ -18,9 +18,9 @@ install.packages("gridExtra")
   library(gridExtra)
 }
 
-# Sediment, Water & Air Model ---------------------------------------------
-SedWatAirV01 = function(t, state, parms){
-  
+# Sediment, Water, SPME, Air & Puf Model ----------------------------------
+SedWatSPMEAirPufV01 = function(t, state, parms){
+    
   # Experimental conditions
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
@@ -85,7 +85,7 @@ SedWatAirV01 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Va * Kaw.t) / Vw
+  B <- (Vw + M * Vw * K + Vf * L * 1000 + Va * Kaw.t) / Vw
   
   # Bioremediation rate
   kb <- parms$kb
@@ -96,86 +96,64 @@ SedWatAirV01 = function(t, state, parms){
   f <- parms$f # fraction
   ka <- parms$ka # 1/d
   
+  # Passive sampler rates
+  ko <- parms$ko # cm/d mass transfer coefficient to SPME
+  ro <- parms$ro # cm/d sampling rate for PUF
+  
   # derivatives dx/dt are computed below
   Cs <- state[1]
   Cw <- state[2]
-  Ca <- state[3]
+  mf <- state[3]
+  Ca <- state[4]
+  mpuf <- state[5]
   
-  dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B
-  dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
-              kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) -
-              kb * Cw) / B
-  dCadt <- (kaw.o * Aaw / Va * (Cw - Ca / Kaw.t))/ B # Ca = [ng/L]
-    
+  dCsdt <- (- f * kdf * Cs * (t <= 1)- (1 - f) * kds * Cs * (t > 1) + ka * Cw) / B
+  dCwdt <- (- ka * Cw + f * kdf * Cs * (t <= 1)+ (1 - f) * kds * Cs * (t > 1) -
+              kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
+              ko * Af / (Vf * 1000) * (Cw - mf / (Vf * Kf)) -
+              kb * Cw) / B # [ng/L]
+  dmfdt <- (ko * Af * Vw / (Vf * 1000 * 1000) * (Cw - mf / (Vf * Kf))) / B # Cw = [ng/L], mf = [ng/cmf]
+  dCadt <- (kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
+              ro * Apuf / (Vpuf * 10^6) * (Ca - mpuf / (Vpuf * d * Kpuf * 1000)))/ B # Ca = [ng/L]
+  dmpufdt <- (ro * Apuf * Va/ (Vpuf * 10^9) * (Ca - mpuf / (Vpuf * d * Kpuf * 1000))) / B # Ca = [ng/L], mpuf = [ng]
+  
   # The computed derivatives are returned as a list
-  return(list(c(dCsdt, dCwdt, dCadt)))
+  return(list(c(dCsdt, dCwdt, dmfdt, dCadt, dmpufdt)))
 }
 
-# Parameters and initial state
-{
-  # Estimating Cs0 (PCB 4 concentration in particles)
-  Ct <- 630.2023 # ng/g PCB 4 sediment concentration
-  M <- 0.1 # kg/L solid-water ratio
-  Cs0 <- Ct * M * 1000 # [ng/L]
-}
-cinit <- c(Cs = Cs0, Cw = 0, Ca = 0) # [ng/L]
-parms <- list(kdf = 4, kds = 0.01, f = 0.6, ka = 400, kb = 0) # Input
+# Initial conditions and run function
+  {
+    # Estimating Cs0 (PCB 4 concentration in particles)
+    Ct <- 630.2023 # ng/g PCB 4 sediment concentration
+    M <- 0.1 # kg/L solid-water ratio
+    Cs0 <- Ct * M * 1000 # [ng/L]
+  }
+cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
+parms <- list(ro = 20000, ko = 1, kdf = 10, kds = 0.1, f = 0.6,
+              ka = 3, kb = 0) # Input
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
-out.1 <- ode(y = cinit, times = t, func = SedWatAirV01, parms = parms)
-head(out.1)
-
+out.3 <- ode(y = cinit, times = t, func = SedWatSPMEAirPufV01, parms = parms)
+head(out.3)
+  
 {
-  df.1 <- as.data.frame(out.1)
-  colnames(df.1) <- c("time", "Cs", "Cw", "Ca")
-  Vw <- 100 #[cm3]
-  Va <- 125 # cm3
-  df.1$Mt <- (df.1$Cs + df.1$Cw) * Vw / 1000 + df.1$Ca * Va / 1000 # [ng]
-  df.1$fp <- (df.1$Cs * Vw / 1000) / df.1$Mt # [ng]
-  df.1$fw <- (df.1$Cw * Vw / 1000) / df.1$Mt # [ng]
-  df.1$fa <- (df.1$Ca * Va / 1000) / df.1$Mt # [ng]
+  df.3 <- as.data.frame(out.3)
+  colnames(df.3) <- c("time", "Cs", "Cw", "mf", "Ca", "mpuf")
+  Vw <- 100 # [cm3]
+  Va <- 125 # [cm3]
+  l <- 1 # [cm]
+  df.3$Mp <- df.3$Cs * Vw / 1000
+  df.3$Mw <- df.3$Cw * Vw / 1000
+  df.3$Mf <- df.3$mf * l
+  df.3$Ma <- df.3$Ca * Va / 1000
+  df.3$Mpuf <- df.3$mpuf
+  df.3$Mt <- (df.3$Cs + df.3$Cw) * Vw / 1000 + df.3$Ca * Va / 1000 + df.3$mf * l + df.3$mpuf # [ng]
+  df.3$fp <- df.3$Mp / df.3$Mt * 100
+  df.3$fw <- df.3$Mw / df.3$Mt * 100
+  df.3$ff <- df.3$Mf / df.3$Mt * 100
+  df.3$fa <- df.3$Ma / df.3$Mt * 100
+  df.3$fpuf <- df.3$Mpuf / df.3$Mt * 100
 }
 
-# Create the plot with all
-ggplot(data = df.1, aes(x = time)) +
-  geom_line(aes(y = fp, color = "Sediment"), linewidth = 1) +       # Line for fp
-  geom_line(aes(y = fw, color = "Water"), linewidth = 1) +          # Line for Fw
-  geom_line(aes(y = fa, color = "Air"), linewidth = 1) +  # Line for Fa
-  labs(title = "Fraction vs Time", 
-       x = "Time", 
-       y = "Fraction") +
-  scale_color_manual(values = c("Sediment" = "blue", "Water" = "red",
-                                "Air" = "purple"),
-                     name = "Phase") +
-  theme_minimal()
 
-# Create the plot with sediment
-ggplot(data = df.1, aes(x = time)) +
-  geom_line(aes(y = Cs, color = "Sediment"), linewidth = 1) +
-  labs(title = "Concentration vs Time", 
-       x = "Time", 
-       y = "Concentration (ng/L)") +
-  scale_color_manual(values = c("Sediment" = "blue"),
-                     name = "Phase") +
-  theme_minimal()
-
-# Create the plot with water
-ggplot(data = df.1, aes(x = time)) +
-  geom_line(aes(y = Cw, color = "Water"), linewidth = 1) +
-  labs(title = "Concentration vs Time", 
-       x = "Time", 
-       y = "Concentration (ng/L)") +
-  scale_color_manual(values = c("Water" = "red"),
-                     name = "Phase") +
-  theme_minimal()
-
-# Create the plot with air
-ggplot(data = df.1, aes(x = time)) +
-  geom_line(aes(y = Ca, color = "Air"), linewidth = 1) +  # Line for Fa
-  labs(title = "Concentration vs Time", 
-       x = "Time", 
-       y = "Concentration (ng/L)") +
-  scale_color_manual(values = c("Air" = "purple"),
-                     name = "Phase") +
-  theme_minimal()
-
+  

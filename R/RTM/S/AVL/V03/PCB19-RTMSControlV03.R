@@ -175,8 +175,8 @@ rtm.PCB19 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
-  dCsdt <- (- f * kdf * Cs * (t <=1) - (1 - f) * kds * Cs  * (t > 1)+ ka * Cw) / B # [ng/L]
-  dCwdt <- (- ka * Cw + f * kdf * Cs * (t <=1)+ (1 - f) * kds * Cs * (t >1)-
+  dCsdt <- (- f * kdf * Cs * (t <= 1) - (1 - f) * kds * Cs  * (t > 1)+ ka * Cw) / B # [ng/L]
+  dCwdt <- (- ka * Cw + f * kdf * Cs * (t <= 1)+ (1 - f) * kds * Cs * (t > 1)-
               kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
               ko * Af / (Vf * 1000) * (Cw - mf / (Vf * Kf)) -
               kb * Cw) / B # [ng/L]

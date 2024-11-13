@@ -1,6 +1,6 @@
-# Code to model PCB 4 in laboratory experiments
+# Code to model PCB 19 in laboratory experiments
 # using sediment from Altavista, VI. Passive measurements
-# of PCB 4 in the water and the air phases are predicted and
+# of PCB 19 in the water and the air phases are predicted and
 # linked to the water and air concentrations from the passive
 # samplers.
 
@@ -25,15 +25,15 @@ install.packages("gridExtra")
 
 # Read data ---------------------------------------------------------------
 {
-  exp.data.SPME <- read.csv("Data/SPME_data_long.csv")
-  exp.data.PUF <- read.csv("Data/PUF_data_long.csv")
+  exp.data.SPME <- read.csv("Data/SPME_data_longV02.csv")
+  exp.data.PUF <- read.csv("Data/PUF_data_longV02.csv")
   # Add sampler
   exp.data.SPME$sampler <- "SPME"
   exp.data.PUF$sampler <- "PUF"
   # Combine
   exp.data <- rbind(exp.data.PUF, exp.data.SPME)
   # Select individual congener from datasets
-  pcb.ind <- "PCB_4"
+  pcb.ind <- "PCB_19"
   # Extract relevant columns from each dataset
   pcbi <- exp.data[, c("ID", "Group", "time", "sampler", pcb.ind)]
 }
@@ -41,24 +41,24 @@ install.packages("gridExtra")
 # Organize data -----------------------------------------------------------
 {
   # Remove lost sample(s), NA
-  pcbi <- pcbi[!is.na(pcbi$PCB_4), ]
+  pcbi <- pcbi[!is.na(pcbi$PCB_19), ]
   # Pull congener-specific data from the dataset without averaging
   # Select SPME control samples
   pcbi.spme.control <- pcbi %>%
     filter(ID == "AVL_S", Group == "Control", sampler == "SPME") %>%
-    rename("mf_Control" = PCB_4)
+    rename("mf_Control" = PCB_19)
   # Select SPME treatment samples
   pcbi.spme.treatment <- pcbi %>%
     filter(ID == "AVL_S", Group == "Treatment", sampler == "SPME") %>%
-    rename("mf_Treatment" = PCB_4)
+    rename("mf_Treatment" = PCB_19)
   # Select PUF control samples
   pcbi.puf.control <- pcbi %>%
     filter(ID == "AVL_S", Group == "Control", sampler == "PUF") %>%
-    rename("mpuf_Control" = PCB_4)
+    rename("mpuf_Control" = PCB_19)
   # Select PUF treatment samples
   pcbi.puf.treatment <- pcbi %>%
     filter(ID == "AVL_S", Group == "Treatment", sampler == "PUF") %>%
-    rename("mpuf_Treatment" = PCB_4)
+    rename("mpuf_Treatment" = PCB_19)
   # Combine the mf and mpuf data for Control
   pcb_combined_control <- cbind(
     pcbi.spme.control %>%
@@ -86,12 +86,12 @@ install.packages("gridExtra")
 }
 
 # Reactive transport function ---------------------------------------------
-rtm.PCB4 = function(t, state, parms){
+rtm.PCB19 = function(t, state, parms){
   
   # Experimental conditions
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
-  MW.pcb <- 223.088 # g/mol PCB 4 molecular weight
+  MW.pcb <- 257.532 # g/mol PCB 19 molecular weight
   R <- 8.3144 # J/(mol K) molar gas constant
   Tst <- 25 #C air temperature
   Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
@@ -105,11 +105,11 @@ rtm.PCB4 = function(t, state, parms){
   Aws <- 30 # cm2
   
   # Congener-specific constants
-  Kaw <- 0.01344142 # PCB 4 dimensionless Henry's law constant @ 25 C
-  dUaw <- 49662.48 # internal energy for the transfer of air-water for PCB 4 (J/mol)
-  Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
-  dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
-  Koa <- 10^(6.521554861) # PCB 4 octanol-air equilibrium partition coefficient
+  Kaw <- 0.018048667 # PCB 19 dimensionless Henry's law constant @ 25 C
+  dUaw <- 51590.22 # internal energy for the transfer of air-water for PCB 19 (J/mol)
+  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
+  dUow <-  -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
+  Koa <- 10^(6.763554861) # PCB 19 octanol-air equilibrium partition coefficient
   
   # PUF constants 
   Apuf <- 7.07 # cm2
@@ -145,11 +145,11 @@ rtm.PCB4 = function(t, state, parms){
   Kaw.t <- Kaw*exp(-dUaw/R*(1/Tw.1-1/Tst.1))*Tw.1/Tst.1
   # ii) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
-  # iii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
+  # iii) Kaw.w, water-side mass transfer coefficient for PCB 17. 600 is the Schmidt number of CO2 at 298 K
   Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
-  # iv) kaw, overall air-water mass transfer coefficient for PCB 4
+  # iv) kaw, overall air-water mass transfer coefficient for PCB 17
   kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
-  # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
+  # v) kaw, overall air-water mass transfer coefficient for PCB 17, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
@@ -175,8 +175,8 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
-  dCsdt <- (- f * kdf * Cs * (t <= 1)- (1 - f) * kds * Cs * (t > 1) + ka * Cw) / B
-  dCwdt <- (- ka * Cw + f * kdf * Cs * (t <= 1)+ (1 - f) * kds * Cs * (t > 1) -
+  dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B # [ng/L]
+  dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
               kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
               ko * Af / (Vf * 1000) * (Cw - mf / (Vf * Kf)) -
               kb * Cw) / B # [ng/L]
@@ -191,17 +191,17 @@ rtm.PCB4 = function(t, state, parms){
 
 # Initial conditions and run function
 {
-  # Estimating Cs0 (PCB 4 concentration in particles)
-  Ct <- 630.2023 # ng/g PCB 4 sediment concentration
+  # Estimating Cpw (PCB 19 concentration in sediment porewater)
+  Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
   M <- 0.1 # kg/L solid-water ratio
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 20000, ko = 1, kdf = 10, kds = 0.1, f = 0.6,
-              ka = 3, kb = 0) # Input 
+parms <- list(ro = 20000, ko = 1, kdf = 7, kds = 0.01, f = 0.6,
+              ka = 350, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
-out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
+out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
 head(out.1)
 
 # Ensure observed data is in a tibble
@@ -253,8 +253,7 @@ print(paste("R-squared for mpuf (average): ", mpuf_r2_value))
 # Run the model with the new time sequence
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 t_daily <- seq(0, 40, by = 1)  # Adjust according to your needs
-out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB4, parms = parms)
-head(out_daily)
+out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB19, parms = parms)
 
 # Convert model results to tibble and ensure numeric values
 model_results_daily_clean <- as_tibble(out_daily) %>%
@@ -264,7 +263,7 @@ model_results_daily_clean <- as_tibble(out_daily) %>%
   select(time, mf, mpuf)  # Select only the relevant columns for plotting
 
 # Export data
-#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4SControl.csv")
+#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSControl.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -315,10 +314,10 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
   theme(legend.title = element_blank())
 
 # Arrange plots side by side
-p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
+p.19 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/S/AVL/PCB4ALV_S_Control.png", plot = p.4, width = 15,
+ggsave("Output/Plots/RTM/S/AVL/PCB19ALV_S_Control.png", plot = p.19, width = 15,
        height = 5, dpi = 500)
 
 
