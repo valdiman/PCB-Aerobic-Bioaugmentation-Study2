@@ -24,7 +24,7 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   # Experimental conditions
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
-  MW.pcb <- 223.088 # g/mol PCB 4 molecular weight
+  MW.pcb <- 257.532 # g/mol PCB 19 molecular weight
   R <- 8.3144 # J/(mol K) molar gas constant
   Tst <- 25 #C air temperature
   Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
@@ -35,13 +35,14 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   Vw <- 100 # cm3 water volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
+  Aws <- 30 # cm2
   
   # Congener-specific constants
-  Kaw <- 0.01344142 # PCB 4 dimensionless Henry's law constant @ 25 C
-  dUaw <- 49662.48 # internal energy for the transfer of air-water for PCB 4 (J/mol)
-  Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
-  dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
-  Koa <- 10^(6.521554861) # PCB 4 octanol-air equilibrium partition coefficient
+  Kaw <- 0.018048667 # PCB 19 dimensionless Henry's law constant @ 25 C
+  dUaw <- 51590.22 # internal energy for the transfer of air-water for PCB 19 (J/mol)
+  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
+  dUow <-  -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
+  Koa <- 10^(6.763554861) # PCB 19 octanol-air equilibrium partition coefficient
   
   # PUF constants 
   Apuf <- 7.07 # cm2
@@ -51,7 +52,7 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
-  Vf <- 0.000000069 # L/cm SPME volume/cm
+  Vf <- 0.000000069 # L/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
   
@@ -77,11 +78,11 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   Kaw.t <- Kaw*exp(-dUaw/R*(1/Tw.1-1/Tst.1))*Tw.1/Tst.1
   # ii) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
-  # iii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
+  # iii) Kaw.w, water-side mass transfer coefficient for PCB 17. 600 is the Schmidt number of CO2 at 298 K
   Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
-  # iv) kaw, overall air-water mass transfer coefficient for PCB 4
+  # iv) kaw, overall air-water mass transfer coefficient for PCB 17
   kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
-  # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
+  # v) kaw, overall air-water mass transfer coefficient for PCB 17, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
@@ -122,15 +123,15 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-  {
-    # Estimating Cs0 (PCB 4 concentration in particles)
-    Ct <- 630.2023 # ng/g PCB 4 sediment concentration
-    M <- 0.1 # kg/L solid-water ratio
-    Cs0 <- Ct * M * 1000 # [ng/L]
-  }
+{
+  # Estimating Cpw (PCB 19 concentration in sediment porewater)
+  Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
+  M <- 0.1 # kg/L solid-water ratio
+  Cs0 <- Ct * M * 1000 # [ng/L]
+}
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 50000, ko = 1, kdf = 4.2, kds = 0.01, f = 0.8,
-              ka = 450, kb = 2200) # Input
+parms <- list(ro = 50000, ko = 1, kdf = 6, kds = 0.01, f = 0.8,
+              ka = 500, kb = 0) # Input
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
 out.3 <- ode(y = cinit, times = t, func = SedWatSPMEAirPufV01, parms = parms)

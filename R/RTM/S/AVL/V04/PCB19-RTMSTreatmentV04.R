@@ -25,8 +25,8 @@ install.packages("gridExtra")
 
 # Read data ---------------------------------------------------------------
 {
-  exp.data.SPME <- read.csv("Data/SPME_data_longV02.csv")
-  exp.data.PUF <- read.csv("Data/PUF_data_longV02.csv")
+  exp.data.SPME <- read.csv("Data/SPME_data_long.csv")
+  exp.data.PUF <- read.csv("Data/PUF_data_long.csv")
   # Add sampler
   exp.data.SPME$sampler <- "SPME"
   exp.data.PUF$sampler <- "PUF"
@@ -197,8 +197,8 @@ rtm.PCB19 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 20000, ko = 1, kdf = 7, kds = 0.01, f = 0.6,
-              ka = 350, kb = 0) # Input
+parms <- list(ro = 50000, ko = 1, kdf = 6, kds = 0.01, f = 0.8,
+              ka = 500, kb = 0) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
