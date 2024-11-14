@@ -129,8 +129,8 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
     Cs0 <- Ct * M * 1000 # [ng/L]
   }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 500, ko = 1, kdf = 50, kds = 0.1, f = 0.6,
-              ka = 2, kb = 0) # Input
+parms <- list(ro = 50000, ko = 1, kdf = 4.2, kds = 0.01, f = 0.8,
+              ka = 450, kb = 2200) # Input
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
 out.3 <- ode(y = cinit, times = t, func = SedWatSPMEAirPufV01, parms = parms)
@@ -149,11 +149,22 @@ head(out.3)
   df.3$Mpuf <- df.3$mpuf
   df.3$Mt <- (df.3$Cs + df.3$Cw) * Vw / 1000 + df.3$Ca * Va / 1000 + df.3$mf * l + df.3$mpuf # [ng]
   df.3$fp <- df.3$Mp / df.3$Mt * 100
-  df.3$fw <- df.3$Mw / df.3$Mt * 100
+  df.3$fw <- df.3$Mw / df.3$Mt * 100 # ~0.5%
   df.3$ff <- df.3$Mf / df.3$Mt * 100
   df.3$fa <- df.3$Ma / df.3$Mt * 100
   df.3$fpuf <- df.3$Mpuf / df.3$Mt * 100
 }
+
+# Create the plot with Sediment
+ggplot(data = df.3, aes(x = time)) +
+  geom_line(aes(y = Cs, color = "Sediment"), linewidth = 1) +
+  geom_line(aes(y = Cw, color = "Water"), linewidth = 1) +
+  labs(title = "Concentration vs Time", 
+       x = "Time", 
+       y = "Concentration (ng/L)") +
+  scale_color_manual(values = c("Sediment" = "brown", "Water" = "red"),
+                     name = "Phase") +
+  theme_minimal()
 
 # Create the plot with puf
 ggplot(data = df.3, aes(x = time)) +
@@ -185,7 +196,15 @@ ggplot(data = df.3, aes(x = time)) +
                      name = "Phase") +
   theme_minimal()
 
-
+# Create the plot with SPME
+ggplot(data = df.3, aes(x = time)) +
+  geom_line(aes(y = mf, color = "SPME"), linewidth = 1) +
+  labs(title = "Concentration vs Time", 
+       x = "Time", 
+       y = "Concentration (ng/cm)") +
+  scale_color_manual(values = c("SPME" = "green"),
+                     name = "Phase") +
+  theme_minimal()
 
 
 
