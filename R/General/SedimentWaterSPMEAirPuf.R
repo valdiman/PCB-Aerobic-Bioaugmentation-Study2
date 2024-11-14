@@ -24,7 +24,7 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   # Experimental conditions
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
-  MW.pcb <- 257.532 # g/mol PCB 19 molecular weight
+  MW.pcb <- 257.532 # g/mol PCB 17 molecular weight
   R <- 8.3144 # J/(mol K) molar gas constant
   Tst <- 25 #C air temperature
   Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
@@ -32,17 +32,18 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   Tw.1 <- 273.15 + Tw
   
   # Bioreactor parameters
+  Vpw <- 25 #cm3 porewater volume 
   Vw <- 100 # cm3 water volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
   
   # Congener-specific constants
-  Kaw <- 0.018048667 # PCB 19 dimensionless Henry's law constant @ 25 C
-  dUaw <- 51590.22 # internal energy for the transfer of air-water for PCB 19 (J/mol)
-  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
-  dUow <-  -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
-  Koa <- 10^(6.763554861) # PCB 19 octanol-air equilibrium partition coefficient
+  Kaw <- 0.015256157 # PCB 17 dimensionless Henry's law constant @ 25 C
+  dUaw <- 52590.22 # internal energy for the transfer of air-water for PCB 17 (J/mol)
+  Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
+  dUow <-  -22888.94 # internal energy for the transfer of octanol-water for PCB 17 (J/mol)
+  Koa <- 10^(7.066554861) # PCB 17 octanol-air equilibrium partition coefficient
   
   # PUF constants 
   Apuf <- 7.07 # cm2
@@ -108,7 +109,7 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   Ca <- state[4]
   mpuf <- state[5]
   
-  dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B # [ng/L]
+  dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B
   dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
               kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
               ko * Af / (Vf * 1000) * (Cw - mf / (Vf * Kf)) -
@@ -124,13 +125,12 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
 
 # Initial conditions and run function
 {
-  # Estimating Cpw (PCB 19 concentration in sediment porewater)
-  Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
+  Ct <- 307.3052312  # ng/g PCB 17 sediment concentration
   M <- 0.1 # kg/L solid-water ratio
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 50000, ko = 1, kdf = 6, kds = 0.01, f = 0.8,
+parms <- list(ro = 50000, ko = 1, kdf = 4, kds = 0.01, f = 0.8,
               ka = 500, kb = 0) # Input
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
@@ -156,6 +156,16 @@ head(out.3)
   df.3$fpuf <- df.3$Mpuf / df.3$Mt * 100
 }
 
+# Create the plot with puf
+ggplot(data = df.3, aes(x = time)) +
+  geom_line(aes(y = mpuf, color = "mpuf"), linewidth = 1) +
+  labs(title = "mass vs Time", 
+       x = "Time", 
+       y = "mass (ng/puf)") +
+  scale_color_manual(values = c("mpuf" = "blue"),
+                     name = "Phase") +
+  theme_minimal()
+
 # Create the plot with Sediment
 ggplot(data = df.3, aes(x = time)) +
   geom_line(aes(y = Cs, color = "Sediment"), linewidth = 1) +
@@ -164,16 +174,6 @@ ggplot(data = df.3, aes(x = time)) +
        x = "Time", 
        y = "Concentration (ng/L)") +
   scale_color_manual(values = c("Sediment" = "brown", "Water" = "red"),
-                     name = "Phase") +
-  theme_minimal()
-
-# Create the plot with puf
-ggplot(data = df.3, aes(x = time)) +
-  geom_line(aes(y = mpuf, color = "mpuf"), linewidth = 1) +
-  labs(title = "mass vs Time", 
-       x = "Time", 
-       y = "mass (ng/puf)") +
-  scale_color_manual(values = c("mpuf" = "blue"),
                      name = "Phase") +
   theme_minimal()
 
