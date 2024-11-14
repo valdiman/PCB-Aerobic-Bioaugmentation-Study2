@@ -126,7 +126,7 @@ SedWatSPMEAirV01 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0)
 parms <- list(ko = 1, kdf = 50, kds = 0.1, f = 0.6,
-              ka = 400, kb = 0) # Input 
+              ka = 200, kb = 100) # Input 
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
 out.2 <- ode(y = cinit, times = t, func = SedWatSPMEAirV01, parms = parms)
@@ -174,5 +174,15 @@ ggplot(data = df.2, aes(x = time)) +
   scale_color_manual(values = c("Water" = "red", "SPME" = "orange",
                                 "Air" = "purple"),
                      name = "Fraction") +
+  theme_minimal()
+
+# Create the plot with all, expect sediment
+ggplot(data = df.2, aes(x = time)) +
+  geom_line(aes(y = Cw, color = "Water"), linewidth = 1) +
+  labs(title = "Concentration vs Time", 
+       x = "Time", 
+       y = "Concentration") +
+  scale_color_manual(values = c("Water" = "red"),
+                     name = "Concentation") +
   theme_minimal()
 
