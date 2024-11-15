@@ -150,7 +150,7 @@ head(out.3)
   df.3$Mpuf <- df.3$mpuf
   df.3$Mt <- (df.3$Cs + df.3$Cw) * Vw / 1000 + df.3$Ca * Va / 1000 + df.3$mf * l + df.3$mpuf # [ng]
   df.3$fp <- df.3$Mp / df.3$Mt * 100
-  df.3$fw <- df.3$Mw / df.3$Mt * 100 # ~0.5%
+  df.3$fw <- df.3$Mw / df.3$Mt * 100 # < 0.5%
   df.3$ff <- df.3$Mf / df.3$Mt * 100
   df.3$fa <- df.3$Ma / df.3$Mt * 100
   df.3$fpuf <- df.3$Mpuf / df.3$Mt * 100

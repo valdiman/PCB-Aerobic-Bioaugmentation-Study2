@@ -126,7 +126,7 @@ SedWatSPMEAirV01 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0)
 parms <- list(ko = 1, kdf = 50, kds = 0.1, f = 0.6,
-              ka = 200, kb = 100) # Input 
+              ka = 200, kb = 0) # Input 
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
 out.2 <- ode(y = cinit, times = t, func = SedWatSPMEAirV01, parms = parms)
