@@ -24,7 +24,7 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   # Experimental conditions
   MH2O <- 18.0152 # g/mol water molecular weight
   MCO2 <- 44.0094 # g/mol CO2 molecular weight
-  MW.pcb <- 257.532 # g/mol PCB 17 molecular weight
+  MW.pcb <- 257.532 # g/mol PCB 31 molecular weight
   R <- 8.3144 # J/(mol K) molar gas constant
   Tst <- 25 #C air temperature
   Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
@@ -32,20 +32,19 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   Tw.1 <- 273.15 + Tw
   
   # Bioreactor parameters
-  Vpw <- 25 #cm3 porewater volume 
   Vw <- 100 # cm3 water volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
   
   # Congener-specific constants
-  Kaw <- 0.015256157 # PCB 17 dimensionless Henry's law constant @ 25 C
-  dUaw <- 52590.22 # internal energy for the transfer of air-water for PCB 17 (J/mol)
-  Kow <- 10^(5.25) # PCB 17 octanol-water equilibrium partition coefficient
-  dUow <-  -22888.94 # internal energy for the transfer of octanol-water for PCB 17 (J/mol)
-  Koa <- 10^(7.066554861) # PCB 17 octanol-air equilibrium partition coefficient
+  Kaw <- 0.011205859 # PCB 31 dimensionless Henry's law constant @ 25 C
+  dUaw <- 53590.22 # internal energy for the transfer of air-water for PCB 31 (J/mol)
+  Kow <- 10^(5.67) # PCB 31 octanol-water equilibrium partition coefficient
+  dUow <-  -24788.94 # internal energy for the transfer of octanol-water for PCB 31 (J/mol)
+  Koa <- 10^(7.620554861) # PCB 31 octanol-air equilibrium partition coefficient
   
-  # PUF constants 
+  # PUF constants
   Apuf <- 7.07 # cm2
   Vpuf <- 0.000029 # m3 volume of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
@@ -67,23 +66,23 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
   D.co2.w <- 1.67606E-05 # cm2/s CO2's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars 
-  D.pcb.air <- D.water.air*(MW.pcb/MH2O)^(-0.5) # cm2/s PCB 4's diffusion coefficient in the gas phase (eq. 18-45)
-  D.pcb.water <- D.co2.w*(MW.pcb/MCO2)^(-0.5) # cm2/s PCB 4's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars
+  D.pcb.air <- D.water.air*(MW.pcb/MH2O)^(-0.5) # cm2/s PCB 31's diffusion coefficient in the gas phase (eq. 18-45)
+  D.pcb.water <- D.co2.w*(MW.pcb/MCO2)^(-0.5) # cm2/s PCB 31's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars
   v.H2O <- 0.010072884	# cm2/s kinematic viscosity of water @ Tair = 25
   V.water.air <- 0.003 # m/s water's velocity of air-side mass transfer without ventilation (eq. 20-15)
   V.co2.w <- 4.1*10^-2 # m/s mass transfer coefficient of CO2 in water side without ventilation
-  SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 4
+  SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 31
   
   # kaw calculations (air-water mass transfer coefficient)
   # i) Ka.w.t, ka.w corrected by water and air temps during experiment
   Kaw.t <- Kaw*exp(-dUaw/R*(1/Tw.1-1/Tst.1))*Tw.1/Tst.1
   # ii) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
-  # iii) Kaw.w, water-side mass transfer coefficient for PCB 17. 600 is the Schmidt number of CO2 at 298 K
+  # iii) Kaw.w, water-side mass transfer coefficient for PCB 31. 600 is the Schmidt number of CO2 at 298 K
   Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
-  # iv) kaw, overall air-water mass transfer coefficient for PCB 17
+  # iv) kaw, overall air-water mass transfer coefficient for PCB 31
   kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
-  # v) kaw, overall air-water mass transfer coefficient for PCB 17, units change
+  # v) kaw, overall air-water mass transfer coefficient for PCB 31, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
@@ -125,12 +124,13 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
 
 # Initial conditions and run function
 {
-  Ct <- 307.3052312  # ng/g PCB 17 sediment concentration
+  # Estimating Cpw (PCB 31 concentration in sediment porewater)
+  Ct <- 254.599912 # ng/g PCB 31 sediment concentration
   M <- 0.1 # kg/L solid-water ratio
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 50000, ko = 1, kdf = 4, kds = 0.01, f = 0.8,
+parms <- list(ro = 50000, ko = 1, kdf = 1, kds = 0.01, f = 0.6,
               ka = 500, kb = 0) # Input
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
