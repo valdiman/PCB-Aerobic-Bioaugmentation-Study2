@@ -114,7 +114,7 @@ rtm.PCB19 = function(t, state, parms){
   # PUF constants 
   Apuf <- 7.07 # cm2
   Vpuf <- 0.000029 # m3 volume of PUF
-  Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
+  Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 19-PUF equilibrium partition coefficient
   d <- 0.0213*100^3 # g/m3 density of PUF
   
   # SPME fiber constants
