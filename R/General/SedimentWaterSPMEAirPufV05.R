@@ -42,13 +42,13 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   dUaw <- 51590.22 # internal energy for the transfer of air-water for PCB 19 (J/mol)
   Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
   dUow <-  -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
-  Koa <- 10^(6.763554861) # PCB 19 octanol-air equilibrium partition coefficient
+  Koa <- 10^(7.765196745) # PCB 19 octanol-air equilibrium partition coefficient
   
   # PUF constants 
   Apuf <- 7.07 # cm2
-  Vpuf <- 0.000029 * 10^6 # cm3 volume of PUF
-  Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
-  d <- 0.0213*100^3 # g/m3 density of PUF
+  Vpuf <- 29 # cm3 volume of PUF
+  d <- 21300 # g/m3 density of PUF
+  Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774) # m3/g PCB 19-PUF equilibrium partition coefficient
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
@@ -86,7 +86,7 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * L) / Vw
+  B <- (Vw + M * Vw * K + Kf * Vf * L) / Vw
   
   # Bioremediation rate
   kb <- parms$kb
@@ -129,9 +129,9 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   M <- 0.1 # kg/L solid-water ratio
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
-cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 8000, ko = 200, kdf = 5, kds = 0.01, f = 0.8,
-              ka = 50, kb = 0) # Input
+cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
+parms <- list(ro = 100, ko = 20, kdf = 2, kds = 0.01, f = 0.8,
+              ka = 350, kb = 0) # Input
 t <- seq(from = 0, to = 40, by = 1)
 # Run the ODE function without specifying parms
 out.3 <- ode(y = cinit, times = t, func = SedWatSPMEAirPufV01, parms = parms)
@@ -144,21 +144,24 @@ head(out.3)
   M <- 0.1 # kg/L solid-water ratio
   Vw <- 100 # [cm3]
   Va <- 125 # [cm3]
-  Vpuf <- 0.000029 * 10^6 # cm3 volume of PUF
-  Vf <- 0.000000069 * 1000 # cm3/cm SPME volume/area
-
+  Vf <- 0.000000069 * 1000 # cm3/cm SPME
+  Vpuf <- 29 # cm3 volume of PUF
+  
   df.3$Mp <- df.3$Cs * ms / (M * 1000)
   df.3$Mw <- df.3$Cw * Vw / 1000 # [ng]
   df.3$Mf <- df.3$Cf * Vf / 1000 # [ng]
   df.3$Ma <- df.3$Ca * Va / 1000 # [ng]
   df.3$Mpuf <- df.3$Cpuf * Vpuf / 1000 # [ng]
-  df.3$Mt <- df.3$Cs * ms / (M * 1000) + df.3$Cw * Vw / 1000 + df.3$Ca * Va / 1000 + df.3$Cf * Vf / 1000 + df.3$Cpuf * Vpuf / 1000 # [ng]
+  df.3$Mt <- df.3$Mp + df.3$Mw + df.3$Mf + df.3$Ma + df.3$Mpuf # [ng]
   df.3$fp <- df.3$Mp / df.3$Mt * 100
   df.3$fw <- df.3$Mw / df.3$Mt * 100 # < 0.5%
   df.3$ff <- df.3$Mf / df.3$Mt * 100
   df.3$fa <- df.3$Ma / df.3$Mt * 100
   df.3$fpuf <- df.3$Mpuf / df.3$Mt * 100
 }
+
+# See Mf and Mpuf
+df.3[1:10, c("Mf", "Mpuf")]
 
 # Create the plot with puf
 ggplot(data = df.3, aes(x = time)) +
@@ -167,6 +170,16 @@ ggplot(data = df.3, aes(x = time)) +
        x = "Time", 
        y = "mass (ng/puf)") +
   scale_color_manual(values = c("mpuf" = "blue"),
+                     name = "Phase") +
+  theme_minimal()
+
+# Create the plot with SPME
+ggplot(data = df.3, aes(x = time)) +
+  geom_line(aes(y = Mf, color = "SPME"), linewidth = 1) +
+  labs(title = "Concentration vs Time", 
+       x = "Time", 
+       y = "Concentration (ng/cm)") +
+  scale_color_manual(values = c("SPME" = "green"),
                      name = "Phase") +
   theme_minimal()
 
@@ -200,17 +213,5 @@ ggplot(data = df.3, aes(x = time)) +
   scale_color_manual(values = c("Water" = "red"),
                      name = "Phase") +
   theme_minimal()
-
-# Create the plot with SPME
-ggplot(data = df.3, aes(x = time)) +
-  geom_line(aes(y = Mf, color = "SPME"), linewidth = 1) +
-  labs(title = "Concentration vs Time", 
-       x = "Time", 
-       y = "Concentration (ng/cm)") +
-  scale_color_manual(values = c("SPME" = "green"),
-                     name = "Phase") +
-  theme_minimal()
-
-
 
   
