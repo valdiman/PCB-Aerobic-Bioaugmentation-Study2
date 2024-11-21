@@ -117,6 +117,7 @@ rtm.PCB4 = function(t, state, parms){
   Vpuf <- 29 # cm3 volume of PUF
   d <- 21300 # g/m3 density of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774) # PCB 4-PUF equilibrium partition coefficient [La/Lpuf]
+  Kpuf <- Kpuf * d
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
@@ -204,8 +205,8 @@ rtm.PCB4 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 1, ko = 20, kdf = 2, kds = 0.01, f = 0.8,
-              ka = 200, kb = 0) # Input
+parms <- list(ro = 20, ko = 0.05, kdf = 2.5, kds = 0.01, f = 0.8,
+              ka = 300, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
