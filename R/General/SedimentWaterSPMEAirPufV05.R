@@ -110,13 +110,13 @@ SedWatSPMEAirPufV01 = function(t, state, parms){
   
   dCsdt <- - f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
-    kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
-    ko * Af * L / Vw * (Cw - Cf / Kf) -
+    (kaw.o * Aaw / Vw) * (Cw - Ca / Kaw.t) -
+    (ko * Af * L / Vw) * (Cw - Cf / Kf) -
     kb * Cw / B # [ng/L]
-  dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
-  dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
-    ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
-  dCpufdt <- ro * Apuf / Vpuf * (Ca - Cpuf / Kpuf) # Ca = [ng/L], Cpuf = [ng/L]
+  dCfdt <- (ko * Af / Vf) * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
+  dCadt <- (kaw.o * Aaw / Va) * (Cw - Ca / Kaw.t) -
+    (ro * Apuf / Va) * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
+  dCpufdt <- (ro * Apuf / Vpuf) * (Ca - Cpuf / Kpuf) # Ca = [ng/L], Cpuf = [ng/L]
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt, dCfdt, dCadt, dCpufdt)))

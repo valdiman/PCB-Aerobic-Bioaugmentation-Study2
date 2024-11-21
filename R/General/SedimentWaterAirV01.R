@@ -116,11 +116,6 @@ SedWatAirV01 = function(t, state, parms){
   Ct <- 630.2023 # ng/g PCB 4 sediment concentration
   M <- 0.1 # kg/L solid-water ratio
   Cs0 <- Ct * M * 1000 # [ng/L]
-  K <- 2128 # [L/kg]
-  Cs0 <- Ct / K * 1000 # @ equilibrium to be dissolved phase [ng/L]
-  
-  
-  
 }
 cinit <- c(Cs = Cs0, Cw = 0, Ca = 0) # [ng/L]
 parms <- list(kdf = 1, kds = 0.01, f = 0.8, ka = 1, kb = 0) # Input
