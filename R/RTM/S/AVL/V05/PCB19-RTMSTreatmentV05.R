@@ -197,8 +197,8 @@ rtm.PCB19 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 100, ko = 20, kdf = 2, kds = 0.01, f = 0.8,
-              ka = 350, kb = 0) # Input
+parms <- list(ro = 50, ko = 5, kdf = 2, kds = 0.01, f = 0.8,
+              ka = 180, kb = 0.1) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)

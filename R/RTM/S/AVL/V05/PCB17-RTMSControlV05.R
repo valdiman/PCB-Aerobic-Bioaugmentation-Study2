@@ -196,8 +196,8 @@ rtm.PCB17 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 150, ko = 10, kdf = 1, kds = 0.01, f = 0.8,
-              ka = 450, kb = 0) # Input
+parms <- list(ro = 80, ko = 5, kdf = 1.2, kds = 0.01, f = 0.8,
+              ka = 270, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
@@ -208,10 +208,20 @@ out.1 <- as.data.frame(out.1)
 colnames(out.1) <- c("time", "Cs", "Cw", "Cf", "Ca", "Cpuf")
   
 # Calculate Mf and Mpuf based on volumes
-Vf <- 0.000000069 # L/cm, SPME volume/area
-Vpuf <- 29 # cm3, volume of PUF
+ms <- 10 # [g]
+M <- 0.1 # kg/L solid-water ratio
+Vw <- 100 # [cm3]
+Va <- 125 # [cm3]
+Vf <- 0.000000069 # L/cm SPME
+Vpuf <- 29 # cm3 volume of PUF
 out.1$mf <- out.1$Cf * Vf  # [ng/cm]
 out.1$mpuf <- out.1$Cpuf * Vpuf / 1000  # [ng/puf]
+out.1$Mt <- out.1$Cs * ms / (M * 1000) + out.1$Cw * Vw / 1000 + out.1$Cf * Vf + out.1$Ca * Va / 1000 + out.1$Cpuf * Vpuf / 1000
+out.1$fs <- out.1$Cs * ms / (M * 1000) / out.1$Mt * 100
+out.1$fw <- out.1$Cw * Vw / 1000 / out.1$Mt * 100
+out.1$ff <- out.1$Cf * Vf / out.1$Mt * 100
+out.1$fa <- out.1$Ca * Va / 1000 / out.1$Mt * 100
+out.1$fpuf <- out.1$Cpuf * Vpuf / 1000 / out.1$Mt * 100
   
 # Ensure observed data is in a tibble
 observed_data <- as_tibble(pcb_combined_control) %>%
