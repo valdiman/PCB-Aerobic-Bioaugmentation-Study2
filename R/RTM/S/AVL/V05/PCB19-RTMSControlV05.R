@@ -176,11 +176,10 @@ rtm.PCB19 = function(t, state, parms){
   Cpuf <- state[5]
   
   dCsdt <- - f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw
-  
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw / B # [ng/L]
+    kb * Cw / 1 # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -198,8 +197,8 @@ rtm.PCB19 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 50, ko = 5, kdf = 2, kds = 0.01, f = 0.8,
-              ka = 180, kb = 0) # Input
+parms <- list(ro = 50.409, ko = 5, kdf = 2.174, kds = 0.0315, f = 0.8,
+              ka = 179.887, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
