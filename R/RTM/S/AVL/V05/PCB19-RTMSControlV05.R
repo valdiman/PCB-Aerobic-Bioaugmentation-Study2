@@ -55,10 +55,18 @@ install.packages("gridExtra")
   pcbi.puf.control <- pcbi %>%
     filter(ID == "AVL_S", Group == "Control", sampler == "PUF") %>%
     rename("mpuf_Control" = PCB_19)
+  
+  # Multiply mpuf_Control by 10
+  pcbi.puf.control$mpuf_Control <- pcbi.puf.control$mpuf_Control * 10
+  
   # Select PUF treatment samples
   pcbi.puf.treatment <- pcbi %>%
     filter(ID == "AVL_S", Group == "Treatment", sampler == "PUF") %>%
     rename("mpuf_Treatment" = PCB_19)
+  
+  # Multiply mpuf_Treatment by 10
+  pcbi.puf.treatment$mpuf_Treatment <- pcbi.puf.treatment$mpuf_Treatment * 10
+  
   # Combine the mf and mpuf data for Control
   pcb_combined_control <- cbind(
     pcbi.spme.control %>%
@@ -118,7 +126,7 @@ rtm.PCB19 = function(t, state, parms){
   Vpuf <- 29 # cm3 volume of PUF
   d <- 0.0213*100^3 # g/m3 density of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774) # PCB 19-PUF equilibrium partition coefficient [m3/g]
-  Kpuf <- Kpuf * d
+  Kpuf <- Kpuf * d # [La/Lpuf]
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
@@ -135,21 +143,21 @@ rtm.PCB19 = function(t, state, parms){
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
   D.co2.w <- 1.67606E-05 # cm2/s CO2's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars 
-  D.pcb.air <- D.water.air*(MW.pcb/MH2O)^(-0.5) # cm2/s PCB 4's diffusion coefficient in the gas phase (eq. 18-45)
-  D.pcb.water <- D.co2.w*(MW.pcb/MCO2)^(-0.5) # cm2/s PCB 4's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars
+  D.pcb.air <- D.water.air*(MW.pcb/MH2O)^(-0.5) # cm2/s PCB 19's diffusion coefficient in the gas phase (eq. 18-45)
+  D.pcb.water <- D.co2.w*(MW.pcb/MCO2)^(-0.5) # cm2/s PCB 19's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars
   v.H2O <- 0.010072884	# cm2/s kinematic viscosity of water @ Tair = 25
   V.water.air <- 0.003 # m/s water's velocity of air-side mass transfer without ventilation (eq. 20-15)
   V.co2.w <- 4.1*10^-2 # m/s mass transfer coefficient of CO2 in water side without ventilation
-  SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 4
+  SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 19
 
   # kaw calculations (air-water mass transfer coefficient)
   # i) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
-  # ii) Kaw.w, water-side mass transfer coefficient for PCB 17. 600 is the Schmidt number of CO2 at 298 K
+  # ii) Kaw.w, water-side mass transfer coefficient for PCB 19. 600 is the Schmidt number of CO2 at 298 K
   Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
-  # iii) kaw, overall air-water mass transfer coefficient for PCB 17
+  # iii) kaw, overall air-water mass transfer coefficient for PCB 19
   kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
-  # iv) kaw, overall air-water mass transfer coefficient for PCB 17, units change
+  # iv) kaw, overall air-water mass transfer coefficient for PCB 19, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
@@ -179,7 +187,7 @@ rtm.PCB19 = function(t, state, parms){
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw / 1 # [ng/L]
+    kb * Cw / B # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -198,7 +206,7 @@ rtm.PCB19 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
 parms <- list(ro = 500.409, ko = 5, kdf = 2.174, kds = 0.001, f = 0.8,
-              ka = 179.887, kb = 0) # Input
+              ka = 165, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
@@ -217,7 +225,7 @@ head(out.1)
   Vf <- 0.000000069 # L/cm SPME
   Vpuf <- 29 # cm3 volume of PUF
   out.1$mf <- out.1$Cf * Vf  # [ng/cm]
-  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000 / 10 # [ng/puf] # Check this 10!!
+  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000 # [ng/puf] # Check this 10!!
   out.1$Mt <- out.1$Cs * ms / (M * 1000) + out.1$Cw * Vw / 1000 + out.1$Cf * Vf + out.1$Ca * Va / 1000 + out.1$Cpuf * Vpuf / 1000
   out.1$fs <- out.1$Cs * ms / (M * 1000) / out.1$Mt * 100
   out.1$fw <- out.1$Cw * Vw / 1000 / out.1$Mt * 100
@@ -282,7 +290,7 @@ head(out.1)
   
   # Calculate Mf and Mpuf based on volumes
   out.daily$mf <- out.daily$Cf * Vf # [ng]
-  out.daily$mpuf <- out.daily$Cpuf * Vpuf / 1000 / 10  # [ng] Check this 10!!
+  out.daily$mpuf <- out.daily$Cpuf * Vpuf / 1000  # [ng] Check this 10!!
   
   # Convert model results to tibble and ensure numeric values
   model_results_daily_clean <- as_tibble(out.daily) %>%
@@ -290,7 +298,7 @@ head(out.1)
     select(time, mf, mpuf)
   
   # Export data
-  #write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSControl.csv")
+  write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSControl.csv")
   
   # Prepare model data for plotting
   model_data_long <- model_results_daily_clean %>%

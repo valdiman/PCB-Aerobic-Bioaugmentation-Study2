@@ -55,10 +55,18 @@ install.packages("gridExtra")
   pcbi.puf.control <- pcbi %>%
     filter(ID == "AVL_S", Group == "Control", sampler == "PUF") %>%
     rename("mpuf_Control" = PCB_19)
+  
+  # Multiply mpuf_Control by 10
+  pcbi.puf.control$mpuf_Control <- pcbi.puf.control$mpuf_Control * 10
+  
   # Select PUF treatment samples
   pcbi.puf.treatment <- pcbi %>%
     filter(ID == "AVL_S", Group == "Treatment", sampler == "PUF") %>%
     rename("mpuf_Treatment" = PCB_19)
+  
+  # Multiply mpuf_Treatment by 10
+  pcbi.puf.treatment$mpuf_Treatment <- pcbi.puf.treatment$mpuf_Treatment * 10
+  
   # Combine the mf and mpuf data for Control
   pcb_combined_control <- cbind(
     pcbi.spme.control %>%
@@ -197,8 +205,8 @@ rtm.PCB19 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 50, ko = 5, kdf = 2, kds = 0.01, f = 0.8,
-              ka = 180, kb = 0.1) # Input
+parms <- list(ro = 500.409, ko = 5, kdf = 2.174, kds = 0.001, f = 0.8,
+              ka = 165, kb = 0.04) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
@@ -278,7 +286,7 @@ model_results_daily_clean <- as_tibble(out.daily) %>%
   select(time, mf, mpuf)
 
 # Export data
-#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSTreatment.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%

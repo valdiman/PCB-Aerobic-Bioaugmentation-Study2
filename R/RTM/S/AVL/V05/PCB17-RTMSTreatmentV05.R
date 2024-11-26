@@ -55,10 +55,18 @@ install.packages("gridExtra")
   pcbi.puf.control <- pcbi %>%
     filter(ID == "AVL_S", Group == "Control", sampler == "PUF") %>%
     rename("mpuf_Control" = PCB_17)
+  
+  # Multiply mpuf_Control by 10
+  pcbi.puf.control$mpuf_Control <- pcbi.puf.control$mpuf_Control * 10
+  
   # Select PUF treatment samples
   pcbi.puf.treatment <- pcbi %>%
     filter(ID == "AVL_S", Group == "Treatment", sampler == "PUF") %>%
     rename("mpuf_Treatment" = PCB_17)
+  
+  # Multiply mpuf_Treatment by 10
+  pcbi.puf.treatment$mpuf_Treatment <- pcbi.puf.treatment$mpuf_Treatment * 10
+  
   # Combine the mf and mpuf data for Control
   pcb_combined_control <- cbind(
     pcbi.spme.control %>%
@@ -196,8 +204,8 @@ rtm.PCB17 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 80, ko = 5, kdf = 1.2, kds = 0.01, f = 0.8,
-              ka = 300, kb = 5) # Input. If B = 1, then kb = 10
+parms <- list(ro = 500.409, ko = 5, kdf = 1.45, kds = 0.001, f = 0.8,
+              ka = 225, kb = 15) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
