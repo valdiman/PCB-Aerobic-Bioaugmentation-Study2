@@ -197,7 +197,7 @@ rtm.PCB19 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 50.409, ko = 5, kdf = 2.174, kds = 0.0315, f = 0.8,
+parms <- list(ro = 500.409, ko = 5, kdf = 2.174, kds = 0.001, f = 0.8,
               ka = 179.887, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
@@ -217,7 +217,7 @@ head(out.1)
   Vf <- 0.000000069 # L/cm SPME
   Vpuf <- 29 # cm3 volume of PUF
   out.1$mf <- out.1$Cf * Vf  # [ng/cm]
-  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000  # [ng/puf]
+  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000 / 10 # [ng/puf] # Check this 10!!
   out.1$Mt <- out.1$Cs * ms / (M * 1000) + out.1$Cw * Vw / 1000 + out.1$Cf * Vf + out.1$Ca * Va / 1000 + out.1$Cpuf * Vpuf / 1000
   out.1$fs <- out.1$Cs * ms / (M * 1000) / out.1$Mt * 100
   out.1$fw <- out.1$Cw * Vw / 1000 / out.1$Mt * 100
@@ -282,7 +282,7 @@ head(out.1)
   
   # Calculate Mf and Mpuf based on volumes
   out.daily$mf <- out.daily$Cf * Vf # [ng]
-  out.daily$mpuf <- out.daily$Cpuf * Vpuf / 1000  # [ng]
+  out.daily$mpuf <- out.daily$Cpuf * Vpuf / 1000 / 10  # [ng] Check this 10!!
   
   # Convert model results to tibble and ensure numeric values
   model_results_daily_clean <- as_tibble(out.daily) %>%
