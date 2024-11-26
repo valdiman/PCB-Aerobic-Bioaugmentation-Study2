@@ -109,19 +109,27 @@ rtm.PCB4 = function(t, state, parms){
   dUaw <- 49662.48 # internal energy for the transfer of air-water for PCB 4 (J/mol)
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
   dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
-  Koa <- 10^(6.521554861) # PCB 4 octanol-air equilibrium partition coefficient
+  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
+  Koa <- 10^(6.789298102) # PCB 4 octanol-air equilibrium partition coefficient
   
   # PUF constants
-  Apuf <- 7.07 # cm2
-  Vpuf <- 0.000029 * 10^6 # cm3 volume of PUF
-  Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
-  d <- 0.0213*100^3 # g/m3 density of PUF
+  Apuf <- 11 # cm2
+  Vpuf <- 29 # cm3 volume of PUF
+  d <- 21300 # g/m3 density of PUF
+  Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774) # PCB 4-PUF equilibrium partition coefficient [La/Lpuf]
+  Kpuf <- Kpuf * d
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
-  Vf <- 0.000000069 * 1000 # cm3/cm SPME volume/area
+  Vf <- 6.9e-05 # cm3/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
-  Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
+  Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 4-SPME equilibrium partition coefficient [Lf/Lw]
+  
+  # Sediment partitioning
+  M <- 0.1 # kg/L solid-water ratio
+  foc <- 0.03 # organic carbon % in particles
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # Lw/kg sediment-water equilibrium partition coefficient
   
   # Sediment partitioning
   M <- 0.1 # kg/L solid-water ratio
@@ -153,7 +161,7 @@ rtm.PCB4 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * L + Va * Kaw.t) / Vw
+  B <- (Vw + M * Vw * K + Vf * L) / Vw
   
   # Bioremediation rate
   kb <- parms$kb
@@ -175,15 +183,15 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[4]
   Cpuf <- state[5]
   
-  dCsdt <- (- f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw) / B
-  dCwdt <- (- ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
-              kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
-              ko * Af * L / Vw * (Cw - Cf / Kf) -
-              kb * Cw) / B # [ng/L]
-  dCfdt <- (ko * Af / Vf * (Cw - Cf / Kf)) / B # Cw = [ng/L], Cf = [ng/L]
-  dCadt <- (kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
-              ro * Apuf / Va * (Ca - Cpuf / (d * Kpuf))) / B # Ca = [ng/L]
-  dCpufdt <- (ro * Apuf / Vpuf * (Ca - Cpuf / (d * Kpuf))) / B # Ca = [ng/L], Cpuf = [ng/L]
+  dCsdt <- - f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw
+  dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
+    kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
+    ko * Af * L / Vw * (Cw - Cf / Kf) -
+    kb * Cw / B # [ng/L]
+  dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
+  dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
+    ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
+  dCpufdt <- ro * Apuf / Vpuf * (Ca - Cpuf / Kpuf) # Ca = [ng/L], Cpuf = [ng/L]
   
   # The computed derivatives are returned as a list
   return(list(c(dCsdt, dCwdt, dCfdt, dCadt, dCpufdt)))
@@ -197,8 +205,8 @@ rtm.PCB4 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 50000, ko = 100, kdf = 7, kds = 0.01, f = 0.8,
-              ka = 450, kb = 0) # Input
+parms <- list(ro = 20, ko = 0.05, kdf = 2.5, kds = 0.01, f = 0.8,
+              ka = 300, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
@@ -208,11 +216,19 @@ head(out.1)
 out.1 <- as.data.frame(out.1)
 colnames(out.1) <- c("time", "Cs", "Cw", "Cf", "Ca", "Cpuf")
 
-# Calculate Mf and Mpuf based on volumes
-Vf <- 0.000000069 * 1000      # cm3/cm, SPME volume/area
-Vpuf <- 0.000029 * 10^6       # cm3, volume of PUF
-out.1$mf <- out.1$Cf * Vf / 1000  # [ng]
-out.1$mpuf <- out.1$Cpuf * Vpuf / 1000  # [ng]
+# Calculate masses based on volumes
+{
+  Vw <- 100 # cm3
+  Va <- 125 # cm3
+  Vf <- 0.000000069 # L/cm, SPME volume/area
+  Vpuf <- 29 # cm3, volume of PUF
+  out.1$ms <- out.1$Cs * Vw / 1000
+  out.1$mw <- out.1$Cw * Vw / 1000
+  out.1$ma <- out.1$Ca * Va / 1000
+  out.1$mf <- out.1$Cf * Vf # [ng/cm]
+  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000  # [ng/puf]
+  out.1$Mt <- out.1$ms + out.1$mw + out.1$ma + out.1$mf + out.1$mpuf
+}
 
 # Ensure observed data is in a tibble
 observed_data <- as_tibble(pcb_combined_control) %>%
@@ -270,7 +286,7 @@ out.daily <- as.data.frame(out_daily)
 colnames(out.daily) <- c("time", "Cs", "Cw", "Cf", "Ca", "Cpuf")
 
 # Calculate Mf and Mpuf based on volumes
-out.daily$mf <- out.daily$Cf * Vf / 1000  # [ng]
+out.daily$mf <- out.daily$Cf * Vf # [ng]
 out.daily$mpuf <- out.daily$Cpuf * Vpuf / 1000  # [ng]
 
 # Convert model results to tibble and ensure numeric values
