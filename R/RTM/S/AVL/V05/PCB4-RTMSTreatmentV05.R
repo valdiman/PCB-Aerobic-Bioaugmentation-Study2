@@ -55,10 +55,18 @@ install.packages("gridExtra")
   pcbi.puf.control <- pcbi %>%
     filter(ID == "AVL_S", Group == "Control", sampler == "PUF") %>%
     rename("mpuf_Control" = PCB_4)
+  
+  # Multiply mpuf_Control by 10
+  pcbi.puf.control$mpuf_Control <- pcbi.puf.control$mpuf_Control * 10
+  
   # Select PUF treatment samples
   pcbi.puf.treatment <- pcbi %>%
     filter(ID == "AVL_S", Group == "Treatment", sampler == "PUF") %>%
     rename("mpuf_Treatment" = PCB_4)
+  
+  # Multiply mpuf_Treatment by 10
+  pcbi.puf.treatment$mpuf_Treatment <- pcbi.puf.treatment$mpuf_Treatment * 10
+  
   # Combine the mf and mpuf data for Control
   pcb_combined_control <- cbind(
     pcbi.spme.control %>%
@@ -109,20 +117,27 @@ rtm.PCB4 = function(t, state, parms){
   dUaw <- 49662.48 # internal energy for the transfer of air-water for PCB 4 (J/mol)
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
   dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
-  Koa <- 10^(6.521554861) # PCB 4 octanol-air equilibrium partition coefficient
+  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
+  Koa <- 10^(6.789298102) # PCB 4 octanol-air equilibrium partition coefficient
   
   # PUF constants
   Apuf <- 7.07 # cm2
   Vpuf <- 29 # cm3 volume of PUF
-  d <- 0.0213*100^3 # g/m3 density of PUF
-  Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774)# m3/g PCB 4-PUF equilibrium partition coefficient
-  Kpuf <- Kpuf * d
+  d <- 21300 # g/m3 density of PUF
+  Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774) # PCB 4-PUF equilibrium partition coefficient [m3/g]
+  Kpuf <- Kpuf * d # [La/Lpuf]
   
   # SPME fiber constants
   Af <- 0.138 # cm2/cm SPME area
   Vf <- 0.000000069 * 1000 # cm3/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
-  Kf <- 10^(1.06 * log10(Kow) - 1.16) # PCB 4-SPME equilibrium partition coefficient
+  Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 4-SPME equilibrium partition coefficient [Lf/Lw]
+  
+  # Sediment partitioning
+  M <- 0.1 # kg/L solid-water ratio
+  foc <- 0.03 # organic carbon % in particles
+  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  K <- foc * 10^(logKoc) # Lw/kg sediment-water equilibrium partition coefficient
   
   # Sediment partitioning
   M <- 0.1 # kg/L solid-water ratio
@@ -154,7 +169,7 @@ rtm.PCB4 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * Kf + Va * Kaw.t) / Vw
+  B <- (Vw + M * Vw * K + Vf * Kf * L) / Vw
   
   # Bioremediation rate
   kb <- parms$kb
@@ -180,7 +195,7 @@ rtm.PCB4 = function(t, state, parms){
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw / B # [ng/L]
+    kb * Cw / 1 # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -197,15 +212,14 @@ rtm.PCB4 = function(t, state, parms){
   M <- 0.1 # kg/L solid-water ratio
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
-
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 50, ko = 0.05, kdf = 2.5, kds = 0.01, f = 0.8,
-              ka = 300, kb = 800) # Input
+parms <- list(ro = 500.409, ko = 5, kdf = 3, kds = 0.001, f = 0.8,
+              ka = 100, kb = 10) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
-
+{
 # Transform Cf and Cpuf to mass/cm and mass/puf
 out.1 <- as.data.frame(out.1)
 colnames(out.1) <- c("time", "Cs", "Cw", "Cf", "Ca", "Cpuf")
@@ -330,7 +344,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
   scale_color_manual(values = c("Model" = "blue", "Observed" = "red")) +
   theme_bw() +
   theme(legend.title = element_blank())
-
+}
 # Arrange plots side by side
 p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
