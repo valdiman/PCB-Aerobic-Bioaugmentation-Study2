@@ -187,7 +187,7 @@ rtm.PCB19 = function(t, state, parms){
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw / B # [ng/L]
+    kb * Cw / 1 # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -205,7 +205,7 @@ rtm.PCB19 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 500.409, ko = 5, kdf = 2.174, kds = 0.001, f = 0.8,
+parms <- list(ro = 540.409, ko = 10, kdf = 2.174, kds = 0.001, f = 0.8,
               ka = 165, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
@@ -298,7 +298,7 @@ head(out.1)
     select(time, mf, mpuf)
   
   # Export data
-  write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSControl.csv")
+  #write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB19AVLSControl.csv")
   
   # Prepare model data for plotting
   model_data_long <- model_results_daily_clean %>%
@@ -347,7 +347,9 @@ head(out.1)
     scale_color_manual(values = c("Model" = "blue", "Observed" = "red")) +
     theme_bw() +
     theme(legend.title = element_blank())
+
 }
+
 # Arrange plots side by side
 p.19 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
