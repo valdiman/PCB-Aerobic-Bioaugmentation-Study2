@@ -160,8 +160,16 @@ rtm.PCB19 = function(t, state, parms){
   # iv) kaw, overall air-water mass transfer coefficient for PCB 17, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * Kf * L) / Vw
+  # Add PCB sorption to LB400 and SPME (~ bioavailability factor)
+  # General partition coefficient obtained from protein, lipid and
+  # phospholipids %s
+  # From UFZ-LSER database (calculate the biopartitioning)
+  # 60 % protein, 5 % lipids, 5 % phospholipids, 30 % water
+  Klb400 <- 10^(4.28) # [Lw/Lcell]
+  Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
+  Vlb400 <- 1 # [um3/cell]
+  Mlb400 <- Clb400 * Vlb400 * 10^-12# [Llb400/Lw]
+  C <- (1 + Klb400 * Mlb400 + Vf * Kf * L / Vw * 1000)
   
   # Bioremediation rate
   # Calibratrion study shows no sign of bioremediation
@@ -184,11 +192,13 @@ rtm.PCB19 = function(t, state, parms){
   Ca <- state[4]
   Cpuf <- state[5]
   
+  Cw <- Cw / C
+  
   dCsdt <- - f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw / 1 # [ng/L]
+    kb * Cw # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -204,17 +214,10 @@ rtm.PCB19 = function(t, state, parms){
   Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
   M <- 0.1 # kg/L solid-water ratio
   Cs0 <- Ct * M * 1000 # [ng/L]
-  # Add PCB sorption to bacteria
-  # General partition coefficient obtained from protein and lipid %s
-  # From UFZ-LSER database (calculate the biopartitionig)
-  # 60 % protein, 5 % lipids, 5 % phospholipids, 30 % water
-  Kcell <- 10^(4.26) # [Lw/Lcell]
-  Mc <- 0.00032 # [Lcell/Lw]
-  Cs0 <- Cs0/(1 + Mc * Kcell)
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 540.409, ko = 10, kdf = 2.174, kds = 0.001, f = 0.8,
-              ka = 165, kb = 0.0) # Input
+              ka = 150, kb = 0) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
