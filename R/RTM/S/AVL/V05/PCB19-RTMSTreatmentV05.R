@@ -164,6 +164,7 @@ rtm.PCB19 = function(t, state, parms){
   B <- (Vw + M * Vw * K + Vf * Kf * L) / Vw
   
   # Bioremediation rate
+  # Calibratrion study shows no sign of bioremediation
   kb <- parms$kb
   
   # Sorption and desorption rates
@@ -199,11 +200,17 @@ rtm.PCB19 = function(t, state, parms){
 
 # Initial conditions and run function
 {
-  # Estimating Cpw (PCB 19 concentration in sediment porewater)
+  # Estimating Cs0 (PCB 19 concentration in sediment)
   Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
   M <- 0.1 # kg/L solid-water ratio
   Cs0 <- Ct * M * 1000 # [ng/L]
-  Cs0 <- Cs0/(1 + 0.0583)
+  # Add PCB sorption to bacteria
+  # General partition coefficient obtained from protein and lipid %s
+  # From UFZ-LSER database (calculate the biopartitionig)
+  # 60 % protein, 5 % lipids, 5 % phospholipids, 30 % water
+  Kcell <- 10^(4.26) # [Lw/Lcell]
+  Mc <- 0.00032 # [Lcell/Lw]
+  Cs0 <- Cs0/(1 + Mc * Kcell)
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
 parms <- list(ro = 540.409, ko = 10, kdf = 2.174, kds = 0.001, f = 0.8,
