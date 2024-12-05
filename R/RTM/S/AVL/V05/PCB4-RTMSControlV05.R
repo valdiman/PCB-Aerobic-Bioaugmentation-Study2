@@ -168,8 +168,8 @@ rtm.PCB4 = function(t, state, parms){
   # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * Kf * L) / Vw
+  # Bioavailability factor due to the SPME fiber
+  B <- (1 + Vf * Kf * L / Vw * 1000)
   
   # Bioremediation rate
   kb <- parms$kb
@@ -191,11 +191,13 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[4]
   Cpuf <- state[5]
   
+  Cw <- Cw / B
+  
   dCsdt <- - f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw / 1 # [ng/L]
+    kb * Cw # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -213,8 +215,8 @@ rtm.PCB4 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 700.409, ko = 5, kdf = 3.1, kds = 0.001, f = 0.8,
-              ka = 100, kb = 1) # Input
+parms <- list(ro = 540.409, ko = 10, kdf = 3.8, kds = 0.001, f = 0.8,
+              ka = 90, kb = 1) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)

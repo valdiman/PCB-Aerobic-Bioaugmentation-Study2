@@ -169,7 +169,7 @@ rtm.PCB19 = function(t, state, parms){
   Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
   Vlb400 <- 1 # [um3/cell]
   Mlb400 <- Clb400 * Vlb400 * 10^-12# [Llb400/Lw]
-  C <- (1 + Klb400 * Mlb400 + Vf * Kf * L / Vw * 1000)
+  B <- (1 + Klb400 * Mlb400 + Vf * Kf * L / Vw * 1000)
   
   # Bioremediation rate
   # Calibratrion study shows no sign of bioremediation
@@ -192,7 +192,7 @@ rtm.PCB19 = function(t, state, parms){
   Ca <- state[4]
   Cpuf <- state[5]
   
-  Cw <- Cw / C
+  Cw <- Cw / B
   
   dCsdt <- - f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -

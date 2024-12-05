@@ -161,7 +161,7 @@ rtm.PCB19 = function(t, state, parms){
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioavailability factor due to the SPME fiber
-  C <- (1 + Vf * Kf * L / Vw * 1000)
+  B <- (1 + Vf * Kf * L / Vw * 1000)
   
   # Bioremediation rate
   kb <- parms$kb
@@ -183,7 +183,7 @@ rtm.PCB19 = function(t, state, parms){
   Ca <- state[4]
   Cpuf <- state[5]
   
-  Cw <- Cw / C
+  Cw <- Cw / B
   
   dCsdt <- - f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -

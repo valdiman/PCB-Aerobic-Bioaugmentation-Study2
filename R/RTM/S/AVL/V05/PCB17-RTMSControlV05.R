@@ -160,11 +160,8 @@ rtm.PCB17 = function(t, state, parms){
   # iv) kaw, overall air-water mass transfer coefficient for PCB 17, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Bioavailability factor B
-  B <- (Vw + M * Vw * K + Vf * Kf * L) / Vw
-  
   # Bioavailability factor due to the SPME fiber
-  C <- (1 + Vf * Kf * L / Vw * 1000)
+  B <- (1 + Vf * Kf * L / Vw * 1000)
   
   # Bioremediation rate
   kb <- parms$kb
@@ -186,7 +183,7 @@ rtm.PCB17 = function(t, state, parms){
   Ca <- state[4]
   Cpuf <- state[5]
   
-  Cw <- Cw / C
+  Cw <- Cw / B
   
   dCsdt <- - f * kdf * Cs - (1 - f) * kds * Cs + ka * Cw
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
@@ -210,7 +207,7 @@ rtm.PCB17 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
 parms <- list(ro = 540.409, ko = 10, kdf = 1.45, kds = 0.001, f = 0.8,
-              ka = 190, kb = 1) # Input
+              ka = 190, kb = 1) # Input. From SPME calibration study, a decrease in PCB17 is seen.
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
