@@ -160,7 +160,7 @@ rtm.PCB19 = function(t, state, parms){
   # iv) kaw, overall air-water mass transfer coefficient for PCB 17, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Add PCB sorption to LB400 and SPME (~ bioavailability factor)
+  # Add PCB sorption to LB400 (~ bioavailability factor)
   # General partition coefficient obtained from protein, lipid and
   # phospholipids %s
   # From UFZ-LSER database (calculate the biopartitioning)
@@ -169,7 +169,7 @@ rtm.PCB19 = function(t, state, parms){
   Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
   Vlb400 <- 1 # [um3/cell]
   Mlb400 <- Clb400 * Vlb400 * 10^-12# [Llb400/Lw]
-  B <- (1 + Klb400 * Mlb400 + Vf * Kf * L / Vw * 1000)
+  B <- (1 + Klb400 * Mlb400)
   
   # Bioremediation rate
   # Calibratrion study shows no sign of bioremediation
@@ -216,7 +216,7 @@ rtm.PCB19 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, mf = 0, Ca = 0, mpuf = 0)
-parms <- list(ro = 540.409, ko = 10, kdf = 2.174, kds = 0.001, f = 0.8,
+parms <- list(ro = 540.409, ko = 10, kdf = 1.9, kds = 0.001, f = 0.8,
               ka = 150, kb = 0) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
