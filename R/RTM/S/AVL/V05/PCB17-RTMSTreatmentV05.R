@@ -169,7 +169,8 @@ rtm.PCB17 = function(t, state, parms){
   Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
   Vlb400 <- 1 # [um3/cell]
   Mlb400 <- Clb400 * Vlb400 * 10^-12 # [Llb400/Lw]
-  B <- (1 + Klb400 * Mlb400 + Vf * Kf * L / Vw * 1000)
+  #B <- (1 + Klb400 * Mlb400 + Vf * Kf * L / Vw * 1000)
+  B <- (1 + Klb400 * Mlb400)
 
   # Bioremediation rate
   kb <- parms$kb
@@ -216,7 +217,7 @@ rtm.PCB17 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
 parms <- list(ro = 540.409, ko = 10, kdf = 1.45, kds = 0.001, f = 0.8,
-              ka = 190, kb = 1, kblb400 = 300) # Input. From SPME calibration study, a decrease in PCB17 is seen.
+              ka = 190, kb = 1, kblb400 = 320) # Input. From SPME calibration study, a decrease in PCB17 is seen.
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
