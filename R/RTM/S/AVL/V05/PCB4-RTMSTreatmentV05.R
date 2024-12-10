@@ -206,7 +206,7 @@ rtm.PCB4 = function(t, state, parms){
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw - kblb400 * (t <= 1) * Cw # [ng/L]
+    kb * Cw - kblb400 * (t <= 7) * Cw # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -225,7 +225,7 @@ rtm.PCB4 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
 parms <- list(ro = 540.409, ko = 10, kdf = 3.8, kds = 0.001, f = 0.8,
-              ka = 90, kb = 1, kblb400 = 250) # Input
+              ka = 90, kb = 1, kblb400 = 20) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
