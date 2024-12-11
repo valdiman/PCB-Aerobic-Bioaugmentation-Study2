@@ -111,7 +111,7 @@ rtm.PCB19 = function(t, state, parms){
   
   # Bioreactor parameters
   Vw <- 100 # cm3 water volume
-  Vpw <- 5 # cm3 porewater volume
+  Vpw <- 50 # cm3 porewater volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
@@ -119,16 +119,16 @@ rtm.PCB19 = function(t, state, parms){
   # Congener-specific constants
   Kaw <- 0.018048667 # PCB 19 dimensionless Henry's law constant @ 25 C
   dUaw <- 51590.22 # internal energy for the transfer of air-water for PCB 19 (J/mol)
-  Kaw.t <- Kaw*exp(-dUaw / R * (1 / Tw.1 - 1 / Tst.1)) * Tw.1 / Tst.1
+  Kaw.t <- Kaw * exp(-dUaw / R * (1 / Tw.1 - 1 / Tst.1)) * Tw.1 / Tst.1
   Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient (low value!!)
   dUow <-  -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
-  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
+  Kow.t <- Kow * exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
   Koa <- 10^(7.765196745) # PCB 19 octanol-air equilibrium partition coefficient
 
   # PUF constants 
   Apuf <- 7.07 # cm2
   Vpuf <- 29 # cm3 volume of PUF
-  d <- 0.0213*100^3 # g/m3 density of PUF
+  d <- 0.0213 * 100^3 # g/m3 density of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774) # PCB 19-PUF equilibrium partition coefficient [m3/g]
   Kpuf <- Kpuf * d # [La/Lpuf]
   
@@ -139,20 +139,20 @@ rtm.PCB19 = function(t, state, parms){
   Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 19-SPME equilibrium partition coefficient
   
   # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  #M <- 0.1 # kg/L solid-water ratio
+  #foc <- 0.03 # organic carbon % in particles
+  #logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
+  #Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
   D.co2.w <- 1.67606E-05 # cm2/s CO2's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars 
-  D.pcb.air <- D.water.air*(MW.pcb/MH2O)^(-0.5) # cm2/s PCB 19's diffusion coefficient in the gas phase (eq. 18-45)
-  D.pcb.water <- D.co2.w*(MW.pcb/MCO2)^(-0.5) # cm2/s PCB 19's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars
+  D.pcb.air <- D.water.air * (MW.pcb/MH2O)^(-0.5) # cm2/s PCB 19's diffusion coefficient in the gas phase (eq. 18-45)
+  D.pcb.water <- D.co2.w * (MW.pcb/MCO2)^(-0.5) # cm2/s PCB 19's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars
   v.H2O <- 0.010072884	# cm2/s kinematic viscosity of water @ Tair = 25
   V.water.air <- 0.003 # m/s water's velocity of air-side mass transfer without ventilation (eq. 20-15)
   V.co2.w <- 4.1*10^-2 # m/s mass transfer coefficient of CO2 in water side without ventilation
-  SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 19
+  SC.pcb.w <- v.H2O / D.pcb.water # Schmidt number PCB 19
   
   # Pore water MTC
   bl <- 0.21 # cm boundary layer thickness
@@ -161,11 +161,11 @@ rtm.PCB19 = function(t, state, parms){
   
   # kaw calculations (air-water mass transfer coefficient)
   # i) Kaw.a, air-side mass transfer coefficient
-  Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
+  Kaw.a <- V.water.air * (D.pcb.air/D.water.air)^(0.67) # [m/s]
   # ii) Kaw.w, water-side mass transfer coefficient for PCB 19. 600 is the Schmidt number of CO2 at 298 K
-  Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
+  Kaw.w <- V.co2.w * (SC.pcb.w/600)^(-0.5) # [m/s]
   # iii) kaw, overall air-water mass transfer coefficient for PCB 19
-  kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
+  kaw.o <- (1 / (Kaw.a * Kaw.t) + (1 / Kaw.w))^-1 # [m/s]
   # iv) kaw, overall air-water mass transfer coefficient for PCB 19, units change
   kaw.o <- kaw.o * 100 * 60 * 60 * 24 # [cm/d]
   
@@ -220,26 +220,30 @@ t.1 <- unique(pcb_combined_control$time)
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
 head(out.1)
 
-{
+
   # Transform Cf and Cpuf to mass/cm and mass/puf
   out.1 <- as.data.frame(out.1)
   colnames(out.1) <- c("time", "Cpw", "Cw", "Cf", "Ca", "Cpuf")
   
   # Calculate Mf and Mpuf based on volumes
-  Vpw <- 5 # [cm3]
+  Vpw <- 50 # [cm3]
   Vw <- 100 # [cm3]
   Va <- 125 # [cm3]
   Vf <- 0.000000069 # L/cm SPME
   Vpuf <- 29 # cm3 volume of PUF
+  out.1$mpw <-  out.1$Cpw * Vpw / 1000
+  out.1$mw <- out.1$Cw * Vw / 1000
   out.1$mf <- out.1$Cf * Vf  # [ng/cm]
+  out.1$ma <- out.1$Ca * Va / 1000
   out.1$mpuf <- out.1$Cpuf * Vpuf / 1000 # [ng/puf]
   out.1$Mt <- out.1$Cpw * Vpw / 1000 + out.1$Cw * Vw / 1000 + out.1$Cf * Vf + out.1$Ca * Va / 1000 + out.1$Cpuf * Vpuf / 1000
-  out.1$fpw <- out.1$Cpw * Vpw / out.1$Mt * 100
-  out.1$fw <- out.1$Cw * Vw / 1000 / out.1$Mt * 100
-  out.1$ff <- out.1$Cf * Vf / out.1$Mt * 100
-  out.1$fa <- out.1$Ca * Va / 1000 / out.1$Mt * 100
-  out.1$fpuf <- out.1$Cpuf * Vpuf / 1000 / out.1$Mt * 100
+  out.1$fpw <- out.1$mpw / out.1$Mt * 100
+  out.1$fw <- out.1$mw / out.1$Mt * 100
+  out.1$ff <- out.1$mf / out.1$Mt * 100
+  out.1$fa <- out.1$ma / out.1$Mt * 100
+  out.1$fpuf <- out.1$mpuf / out.1$Mt * 100
   
+  { 
   # Ensure observed data is in a tibble
   observed_data <- as_tibble(pcb_combined_control) %>%
     select(time, mf_Control, mpuf_Control)
