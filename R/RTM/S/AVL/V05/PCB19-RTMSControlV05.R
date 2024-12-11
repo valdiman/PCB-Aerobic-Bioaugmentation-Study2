@@ -222,7 +222,7 @@ head(out.1)
   Vf <- 0.000000069 # L/cm SPME
   Vpuf <- 29 # cm3 volume of PUF
   out.1$mf <- out.1$Cf * Vf  # [ng/cm]
-  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000 # [ng/puf] # Check this 10!!
+  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000 # [ng/puf]
   out.1$Mt <- out.1$Cs * ms / (M * 1000) + out.1$Cw * Vw / 1000 + out.1$Cf * Vf + out.1$Ca * Va / 1000 + out.1$Cpuf * Vpuf / 1000
   out.1$fs <- out.1$Cs * ms / (M * 1000) / out.1$Mt * 100
   out.1$fw <- out.1$Cw * Vw / 1000 / out.1$Mt * 100
