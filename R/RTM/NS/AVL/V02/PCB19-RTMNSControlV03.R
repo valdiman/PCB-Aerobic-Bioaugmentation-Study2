@@ -157,7 +157,7 @@ rtm.PCB19 = function(t, state, parms){
   # Pore water MTC
   bl <- 0.21 # cm boundary layer thickness
   ks <- D.pcb.water * 60 * 60 * 24 / bl # [cm/d]
-  ks.m.d <- ks / 100 # [m/d]
+  ks.m.d <- ks / 100 # [m/d] Just to compare with other published values
   
   # kaw calculations (air-water mass transfer coefficient)
   # i) Kaw.a, air-side mass transfer coefficient
