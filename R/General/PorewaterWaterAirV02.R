@@ -61,8 +61,8 @@ PwWaAirV01 = function(t, state, parms){
   Cw <- state[3]
   Ca <- state[4]
   
-  dCsdt <- - ksed * Aws * (Ct - Cpw * Kd / 1000)
-  dCpwdt <- ksed * Aws / Vpw * (Ct / Kd * 1000 - Cpw) -
+  dCsdt <- - ksed * (Cs - Cpw * Kd / 1000)
+  dCpwdt <- ksed * Aws / Vpw * (Cs / Kd * 1000 - Cpw) -
     kb * Cpw - ks * Aws / Vpw * (Cpw - Cw)
   dCwdt <- ks * Aws / Vw * (Cpw - Cw) -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) -
@@ -70,13 +70,13 @@ PwWaAirV01 = function(t, state, parms){
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) # Ca = [ng/L]
     
   # The computed derivatives are returned as a list
-  return(list(c(dCpwdt, dCwdt, dCadt)))
+  return(list(c(dCsdt, dCpwdt, dCwdt, dCadt)))
 }
 
 # Initial conditions and run function
 Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
-cinit <- c(Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
-parms <- list(ksed = 1, kb = 0.0) # Input
+cinit <- c(Cs = Ct, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
+parms <- list(ksed = 0.001, kb = 0.0) # Input
 t <- seq(from = 0, to = 80, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t, func = PwWaAirV01, parms = parms)
@@ -84,16 +84,17 @@ head(out.1)
 
 {
   df.1 <- as.data.frame(out.1)
-  colnames(df.1) <- c("time", "Cpw", "Cw", "Ca")
+  colnames(df.1) <- c("time", "Cs", "Cpw", "Cw", "Ca")
   ms <- 10 # [g]
   Vpw <- 4 # [cm3]
   Vw <- 100 # [cm3]
   Va <- 125 # cm3
-  #df.1$Ms <- df.1$Ct * ms
+  df.1$Ms <- df.1$Cs * ms
   df.1$Mpw <- df.1$Cpw * Vpw / 1000
   df.1$Mw <- df.1$Cw * Vw / 1000
   df.1$Ma <- df.1$Ca * Va / 1000
-  df.1$Mt <- df.1$Cpw * Vpw / 1000 + df.1$Cw * Vw / 1000 + df.1$Ca * Va / 1000 # [ng]
+  df.1$Mt <- df.1$Cs * ms + df.1$Cpw * Vpw / 1000 + df.1$Cw * Vw / 1000 + df.1$Ca * Va / 1000 # [ng]
+  df.1$fs <- df.1$Cs * ms / df.1$Mt # [ng]
   df.1$fpw <- (df.1$Cpw * Vpw / 1000) / df.1$Mt # [ng]
   df.1$fw <- (df.1$Cw * Vw / 1000) / df.1$Mt # [ng]
   df.1$fa <- (df.1$Ca * Va / 1000) / df.1$Mt # [ng]
