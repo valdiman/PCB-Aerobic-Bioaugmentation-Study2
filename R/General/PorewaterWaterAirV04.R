@@ -41,13 +41,15 @@ PwWaAirV03 = function(t, state, parms){
   foc <- 0.03 # organic carbon % in sediment
   logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
   Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
+  n <- 0.42 # [%] porposity
+  ds <- 1.54 # [g/L] sediment density
   
   # Pore water MTC
   bl <- 0.21 # cm boundary layer thickness
-  ks <- 6.928 * 10^-6 * 60 * 60 * 24 / bl / 50# [cm/d]
+  ks <- 6.928 * 10^-6 * 60 * 60 * 24 / bl # [cm/d]
   ks.m.d <- ks / 100 # [m/d]
   
-  kaw.o <- 132.23 /50 # [cm/d]
+  kaw.o <- 132.23 # [cm/d]
   Kaw.t <- 0.012
   
   # sediment desorption
@@ -59,8 +61,8 @@ PwWaAirV03 = function(t, state, parms){
   Cw <- state[3]
   Ca <- state[4]
   
-  dCsdt <- - ksed * (Cs - Cpw * Kd / 1000)
-  dCpwdt <- ksed * Apw / Vpw * (Cs / Kd * 1000 - Cpw) -
+  
+  dCpwdt <- ksed * Apw / Vpw * (Cs * ds - Cpw) -
     ks * Aws / Vpw * (Cpw - Cw)
   dCwdt <- ks * Aws / Vw * (Cpw - Cw) -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t)
@@ -73,7 +75,7 @@ PwWaAirV03 = function(t, state, parms){
 # Initial conditions and run function
 Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
 cinit <- c(Cs = Ct, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
-parms <- list(ksed = 0.001/50) # Input
+parms <- list(ksed = 0.001) # Input
 t <- seq(from = 0, to = 30, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t, func = PwWaAirV03, parms = parms)
@@ -96,3 +98,4 @@ df.1$Ma <- df.1$Ca * Va / 1000 # Mass in air (ng)
 
 # Total mass in the system (ng)
 df.1$Mt <- df.1$Ms + df.1$Mpw + df.1$Mw + df.1$Ma
+
