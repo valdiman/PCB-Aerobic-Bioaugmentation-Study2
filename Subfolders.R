@@ -3,6 +3,8 @@
 dir.create("Data")
 dir.create("R")
 dir.create("R/General")
+dir.create("R/General/NS")
+dir.create("R/General/S")
 dir.create("R/StatAnalysis")
 dir.create("R/StatAnalysis/PUF")
 dir.create("R/StatAnalysis/SPME")
