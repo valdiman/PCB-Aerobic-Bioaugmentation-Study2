@@ -27,6 +27,11 @@ PwWaAirV01 = function(t, state, parms){
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
+  Apw <- 1166000 # [cm2]
+  ms <- 10 # [g]
+  n <- 0.42 # [%] porosity
+  ds <- 1.54 # [g/L] sediment density
+  Vs <- ms / ds * 1000 # [cm3]
   
   # Pore water MTC
   bl <- 0.21 # cm boundary layer thickness
@@ -37,10 +42,10 @@ PwWaAirV01 = function(t, state, parms){
   Kaw.t <- 0.012
   
   # Bioremediation rate
-  kb <- parms$kb
+  kb <- parms$kb # [1/d]
   
   # sediment desorption
-  ksed <- parms$ksed
+  ksed <- parms$ksed # [1/d]
   
   # derivatives dx/dt are computed below
   Cs <- state[1]
@@ -49,7 +54,7 @@ PwWaAirV01 = function(t, state, parms){
   Ca <- state[4]
   
   dCsdt <- - ksed * (Cs - Cpw)
-  dCpwdt <- ksed * Aws / Vpw * (Cs - Cpw) -
+  dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -
     ks * Aws / Vpw * (Cpw - Cw) -
     kb * Cpw
   dCwdt <- ks * Aws / Vw * (Cpw - Cw) -
@@ -63,20 +68,11 @@ PwWaAirV01 = function(t, state, parms){
 
 # Initial conditions and run function
 Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
-foc <- 0.03 # organic carbon % in sediment
-Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
-dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
-R <- 8.3144 # J/(mol K) molar gas constant
-Tst <- 25 #C air temperature
-Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
-Tw <- 20 # C water temperature
-Tw.1 <- 273.15 + Tw
-Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
-logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
 n <- 0.42 # [%] porosity
 ds <- 1.54 # [g/L] sediment density
-Cs <- Ct * (1-n) * ds # [ng/L]
+M <- ds * (1-n) / n # [g/L]
+Cs <- Ct * M # [ng/L]
+Cs <- Ct * ds * (1-n) # [ng/L]
 
 cinit <- c(Cs = Cs, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
 parms <- list(ksed = 0.001, kb = 0.0) # Input
@@ -92,7 +88,7 @@ head(out.1)
   Vpw <- 4 # [cm3]
   Vw <- 100 # [cm3]
   Va <- 125 # cm3
-  df.1$Ms <- df.1$Cs * ms * Kd / 1000
+  df.1$Ms <- df.1$Cs * ms / M
   df.1$Mpw <- df.1$Cpw * Vpw / 1000
   df.1$Mw <- df.1$Cw * Vw / 1000
   df.1$Ma <- df.1$Ca * Va / 1000

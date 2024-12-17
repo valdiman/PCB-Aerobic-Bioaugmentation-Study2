@@ -27,6 +27,7 @@ PwWaAirV01 = function(t, state, parms){
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
+  Apw <- 1166000 # [cm2]
   
   # Pore water MTC
   bl <- 0.21 # cm boundary layer thickness
