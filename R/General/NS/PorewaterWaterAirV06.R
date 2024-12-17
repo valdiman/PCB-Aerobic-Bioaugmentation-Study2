@@ -28,21 +28,6 @@ PwWaAirV01 = function(t, state, parms){
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
   
-  # Sediment paritioning
-  foc <- 0.03 # organic carbon % in sediment
-  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
-  dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
-  R <- 8.3144 # J/(mol K) molar gas constant
-  Tst <- 25 #C air temperature
-  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
-  Tw <- 20 # C water temperature
-  Tw.1 <- 273.15 + Tw
-  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-  n <- 0.42 # [%] porosity
-  ds <- 1.54 # [g/L] sediment density
-  
   # Pore water MTC
   bl <- 0.21 # cm boundary layer thickness
   ks <- 6.928 * 10^-6 * 60 * 60 * 24 / bl # [cm/d]
@@ -65,7 +50,8 @@ PwWaAirV01 = function(t, state, parms){
   
   dCsdt <- - ksed * (Cs - Cpw)
   dCpwdt <- ksed * Aws / Vpw * (Cs - Cpw) -
-    kb * Cpw - ks * Aws / Vpw * (Cpw - Cw)
+    ks * Aws / Vpw * (Cpw - Cw) -
+    kb * Cpw
   dCwdt <- ks * Aws / Vw * (Cpw - Cw) -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) -
     kb * Cw # [ng/L]
@@ -106,15 +92,15 @@ head(out.1)
   Vpw <- 4 # [cm3]
   Vw <- 100 # [cm3]
   Va <- 125 # cm3
-  df.1$Ms <- df.1$Cs * ms / ds / (1-n)
+  df.1$Ms <- df.1$Cs * ms * Kd / 1000
   df.1$Mpw <- df.1$Cpw * Vpw / 1000
   df.1$Mw <- df.1$Cw * Vw / 1000
   df.1$Ma <- df.1$Ca * Va / 1000
-  df.1$Mt <- df.1$Cs * ms + df.1$Cpw * Vpw / 1000 + df.1$Cw * Vw / 1000 + df.1$Ca * Va / 1000 # [ng]
-  df.1$fs <- df.1$Cs * ms / df.1$Mt # [ng]
-  df.1$fpw <- (df.1$Cpw * Vpw / 1000) / df.1$Mt # [ng]
-  df.1$fw <- (df.1$Cw * Vw / 1000) / df.1$Mt # [ng]
-  df.1$fa <- (df.1$Ca * Va / 1000) / df.1$Mt # [ng]
+  df.1$Mt <- df.1$Ms + df.1$Mpw + df.1$Mw + df.1$Ma # [ng]
+  df.1$fs <- df.1$Ms / df.1$Mt # [ng]
+  df.1$fpw <- df.1$Mpw / df.1$Mt # [ng]
+  df.1$fw <- df.1$Mw  / df.1$Mt # [ng]
+  df.1$fa <- df.1$Ma / df.1$Mt # [ng]
 }
 
 # Create the plot with all

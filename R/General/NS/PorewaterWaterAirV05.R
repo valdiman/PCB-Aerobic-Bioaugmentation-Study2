@@ -28,21 +28,6 @@ PwWaAirV03 = function(t, state, parms){
   Aws <- 30 # cm2
   Apw <- 1166000 # [cm2]
   
-  # Sediment partitioning
-  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
-  dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
-  R <- 8.3144 # J/(mol K) molar gas constant
-  Tst <- 25 #C air temperature
-  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
-  Tw <- 20 # C water temperature
-  Tw.1 <- 273.15 + Tw
-  Kow.t <- Kow * exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
-  foc <- 0.03 # organic carbon % in sediment
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-  n <- 0.42 # [%] porosity
-  ds <- 1.54 # [g/L] sediment density
-  
   # Pore water MTC
   bl <- 0.21 # cm boundary layer thickness
   ks <- 6.928 * 10^-6 * 60 * 60 * 24 / bl # [cm/d]
@@ -81,7 +66,10 @@ PwWaAirV03 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-Ct <- 259.8342356 * (1- 0.42) * 1.54 # ng/g PCB 19 sediment concentration
+Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
+n <- 0.42 # [%] porosity
+ds <- 1.54 # [g/L] sediment density
+Cs <- Ct * (1-n) * ds # [ng/L]
 cinit <- c(Cs = Ct, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
 parms <- list(ksed = 0.001, D = 0.1) # Diffusion coefficient 'D' needs to be defined
 t <- seq(from = 0, to = 30, by = 1)
@@ -99,7 +87,7 @@ Vpw <- 4 # Porewater volume in cm3
 Vw <- 100 # Water volume in cm3
 Va <- 125 # Air volume in cm3
 
-df.1$Ms <- df.1$Cs * ms # Mass in sediment (ng)
+df.1$Ms <- df.1$Cs * ms / (ds * (1-n)) # Mass in sediment (ng)
 df.1$Mpw <- df.1$Cpw * Vpw / 1000 # Mass in porewater (ng)
 df.1$Mw <- df.1$Cw * Vw / 1000 # Mass in water (ng)
 df.1$Ma <- df.1$Ca * Va / 1000 # Mass in air (ng)
