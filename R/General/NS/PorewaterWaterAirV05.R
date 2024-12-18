@@ -66,13 +66,16 @@ PwWaAirV03 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
-n <- 0.42 # [%] porosity
-ds <- 1.54 # [g/L] sediment density
-Cs <- Ct * (1-n) * ds # [ng/L]
-cinit <- c(Cs = Ct, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
+{
+  Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
+  n <- 0.42 # [%] porosity
+  ds <- 1540 # [g/L] sediment density
+  M <- ds * (1 - n) / n # [g/L]
+  Cs0 <- Ct * M # [ng/L]
+}
+cinit <- c(Cs = Cs0, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
 parms <- list(ksed = 0.001, D = 0.1) # Diffusion coefficient 'D' needs to be defined
-t <- seq(from = 0, to = 30, by = 1)
+t <- seq(from = 0, to = 80, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t, func = PwWaAirV03, parms = parms)
 head(out.1)

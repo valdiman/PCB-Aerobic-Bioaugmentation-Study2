@@ -38,6 +38,7 @@ PwWaSPMEAirPufV01 = function(t, state, parms){
   
   # Congener-specific constants
   dUow <-  -22888.94 # internal energy for the transfer of octanol-water for PCB 17 (J/mol)
+  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient (low value!!)
   Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
   Koa <- 10^(7.628540115) # PCB 17 octanol-air equilibrium partition coefficient
   

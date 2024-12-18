@@ -19,7 +19,7 @@ install.packages("gridExtra")
 }
 
 # Porewater, Water & Air Model ---------------------------------------------
-PwWaAirV01 = function(t, state, parms){
+PwWaAirV06 = function(t, state, parms){
   
   # Bioreactor parameters
   Vw <- 100 # cm3 water volume
@@ -31,7 +31,7 @@ PwWaAirV01 = function(t, state, parms){
   ms <- 10 # [g]
   n <- 0.42 # [%] porosity
   ds <- 1540 # [g/L] sediment density
-  M <- ds * (1-n) / n # [g/L]
+  M <- ds * (1 - n) / n # [g/L]
   Vs <- ms / M * 1000 # [cm3]
   
   # Pore water MTC
@@ -54,15 +54,13 @@ PwWaAirV01 = function(t, state, parms){
   Cw <- state[3]
   Ca <- state[4]
   
-  dCsdt <- - ksed * (Cs - Cpw)
+  dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
   dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -
     ks * Aws / Vpw * (Cpw - Cw) -
     kb * Cpw
-  
   dCwdt <- ks * Aws / Vw * (Cpw - Cw) -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) -
     kb * Cw # [ng/L]
-  
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) # Ca = [ng/L]
     
   # The computed derivatives are returned as a list
@@ -70,18 +68,18 @@ PwWaAirV01 = function(t, state, parms){
 }
 
 # Initial conditions and run function
-Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
-n <- 0.42 # [%] porosity
-ds <- 1540 # [g/L] sediment density
-M <- ds * (1-n) / n # [g/L]
-Cs <- Ct * M # [ng/L]
-#Cs <- Ct * ds * (1-n) # [ng/L]
-
-cinit <- c(Cs = Cs, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
-parms <- list(ksed = 0.001, kb = 0.0) # Input
-t <- seq(from = 0, to = 40, by = 1)
+{
+  Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
+  n <- 0.42 # [%] porosity
+  ds <- 1540 # [g/L] sediment density
+  M <- ds * (1 - n) / n # [g/L]
+  Cs0 <- Ct * M # [ng/L]
+}
+cinit <- c(Cs = Cs0, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
+parms <- list(ksed = 0.001, kb = 0.0) # Input ksed from Koelmas et al 2010
+t <- seq(from = 0, to = 80, by = 1)
 # Run the ODE function without specifying parms
-out.1 <- ode(y = cinit, times = t, func = PwWaAirV01, parms = parms)
+out.1 <- ode(y = cinit, times = t, func = PwWaAirV06, parms = parms)
 head(out.1)
 
 {
@@ -102,14 +100,14 @@ head(out.1)
   df.1$fa <- df.1$Ma / df.1$Mt # [ng]
 }
 
-# Create the plot with all
+# Concentration plot
 ggplot(data = df.1, aes(x = time)) +
-  geom_line(aes(y = fpw, color = "Porewater"), linewidth = 1) +       # Line for fpw
-  geom_line(aes(y = fw, color = "Water"), linewidth = 1) +          # Line for fw
-  geom_line(aes(y = fa, color = "Air"), linewidth = 1) +  # Line for Fa
+  geom_line(aes(y = Cpw, color = "Porewater"), linewidth = 1) +       # Line for fpw
+  geom_line(aes(y = Cw, color = "Water"), linewidth = 1) +          # Line for fw
+  geom_line(aes(y = Ca, color = "Air"), linewidth = 1) +  # Line for Fa
   labs(title = "Fraction vs Time", 
        x = "Time", 
-       y = "Fraction") +
+       y = "Concentration") +
   scale_color_manual(values = c("Porewater" = "blue", "Water" = "red",
                                 "Air" = "purple"),
                      name = "Phase") +
