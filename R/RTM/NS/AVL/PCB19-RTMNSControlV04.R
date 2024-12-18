@@ -148,7 +148,7 @@ rtm.PCB19 = function(t, state, parms){
   V.co2.w <- 4.1*10^-2 # m/s mass transfer coefficient of CO2 in water side without ventilation
   SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 19
   bl <- 0.21 # cm boundary layer thickness
-  ks <- ks <- D.pcb.water / bl # [cm/s]
+  ks <- D.pcb.water / bl # [cm/s]
   ks.m.d <- ks * 60 * 60 * 24 / 100 # [m/d]
   
   # kaw calculations (air-water mass transfer coefficient)
@@ -180,11 +180,13 @@ rtm.PCB19 = function(t, state, parms){
   
   # new kb works before 3 days
   if (t < tb) {
-    kb <- 0.05  # Control
+    kb <- 0.0  # Control
   }
   
   dCpwdt <- -kb * Cpw
-  dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) + ks * Aws * 60 * 60 * 24 / Vw * (Cpw - Cw) - kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
+  dCwdt <- kaw.o * Aaw / Vw * (Ca / (Kaw.t) - Cw) +
+    ks * Aws * 60 * 60 * 24 / Vw * (Cpw - Cw) -
+    kb * Cw # 864 to change second to days and um to m, Ca in [ng/L]
   dmfdt <- ko * Af /(L * 1000) * (Cw - mf / (Vf * L * Kf)) # Cw = [ng/L], mf = [ng/cmf]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t)
   dmpufdt <- ro * Ca * 1000 - ro * (mpuf / (Vpuf * d)) / (Kpuf) # Ca = [ng/L], mpuf = [ng]
@@ -195,7 +197,7 @@ rtm.PCB19 = function(t, state, parms){
 
 # Initial conditions and run function
 {
-  Ct <- 259.8342356 * 4 # ng/g PCB 19 sediment concentration
+  Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
   foc <- 0.03 # organic carbon % in sediment
   Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
   dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
