@@ -30,8 +30,9 @@ PwWaAirV01 = function(t, state, parms){
   Apw <- 1166000 # [cm2]
   ms <- 10 # [g]
   n <- 0.42 # [%] porosity
-  ds <- 1.54 # [g/L] sediment density
-  Vs <- ms / ds * 1000 # [cm3]
+  ds <- 1540 # [g/L] sediment density
+  M <- ds * (1-n) / n # [g/L]
+  Vs <- ms / M * 1000 # [cm3]
   
   # Pore water MTC
   bl <- 0.21 # cm boundary layer thickness
@@ -57,9 +58,11 @@ PwWaAirV01 = function(t, state, parms){
   dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -
     ks * Aws / Vpw * (Cpw - Cw) -
     kb * Cpw
+  
   dCwdt <- ks * Aws / Vw * (Cpw - Cw) -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) -
     kb * Cw # [ng/L]
+  
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) # Ca = [ng/L]
     
   # The computed derivatives are returned as a list
@@ -69,10 +72,10 @@ PwWaAirV01 = function(t, state, parms){
 # Initial conditions and run function
 Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
 n <- 0.42 # [%] porosity
-ds <- 1.54 # [g/L] sediment density
+ds <- 1540 # [g/L] sediment density
 M <- ds * (1-n) / n # [g/L]
 Cs <- Ct * M # [ng/L]
-Cs <- Ct * ds * (1-n) # [ng/L]
+#Cs <- Ct * ds * (1-n) # [ng/L]
 
 cinit <- c(Cs = Cs, Cpw = 0, Cw = 0, Ca = 0) # [ng/L]
 parms <- list(ksed = 0.001, kb = 0.0) # Input

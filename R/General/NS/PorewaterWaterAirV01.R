@@ -57,7 +57,7 @@ PwWaAirV01 = function(t, state, parms){
 
 # Initial conditions and run function
 {
-  Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
+  Cs <- 259.8342356 # ng/g PCB 19 sediment concentration
   foc <- 0.03 # organic carbon % in sediment
   Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
   dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
@@ -69,11 +69,11 @@ PwWaAirV01 = function(t, state, parms){
   Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
   logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
   Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-  Cpw <- Ct / Kd * 1000 # [ng/L]
+  Cpw <- Cs / Kd * 1000 # [ng/L]
 }
 cinit <- c(Cpw = Cpw, Cw = 0, Ca = 0) # [ng/L]
 parms <- list(kb = 0.0) # Input
-t <- seq(from = 0, to = 80, by = 1)
+t <- seq(from = 0, to = 30, by = 1)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t, func = PwWaAirV01, parms = parms)
 head(out.1)
