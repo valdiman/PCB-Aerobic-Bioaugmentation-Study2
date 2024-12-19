@@ -154,12 +154,12 @@ rtm.PCB19 = function(t, state, parms){
   V.co2.w <- 4.1*10^-2 # m/s mass transfer coefficient of CO2 in water side without ventilation
   SC.pcb.w <- v.H2O / D.pcb.water # Schmidt number PCB 19
   
-  # Pore water MTC
+  # Porewater-water MTC (kpw)
   bl <- 0.21 # cm boundary layer thickness
-  ks <- D.pcb.water * 60 * 60 * 24 / bl # [cm/d]
-  ks.m.d <- ks / 100 # [m/d]
+  kpw <- D.pcb.water * 60 * 60 * 24 / bl # [cm/d]
+  kpw.m.d <- kpw / 100 # [m/d]
   
-  # kaw calculations (air-water mass transfer coefficient)
+  # Air-water mass MTC (kaw.o)
   # i) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air * (D.pcb.air/D.water.air)^(0.67) # [m/s]
   # ii) Kaw.w, water-side mass transfer coefficient for PCB 19. 600 is the Schmidt number of CO2 at 298 K
@@ -169,8 +169,9 @@ rtm.PCB19 = function(t, state, parms){
   # iv) kaw, overall air-water mass transfer coefficient for PCB 19, units change
   kaw.o <- kaw.o * 100 * 60 * 60 * 24 # [cm/d]
   
-  # sediment desorption
-  ksed <- parms$ksed # [1/d]
+  # Sediment-porewater radial diffusion model (ksed)
+  logksed <- -0.832 * log10(Kow.t) + 1.34 # [1/d] From Koelmans et al, Environ. Sci. Technol. 2010, 44, 3014–3020
+  ksed <- 10^(logksed)
   
   # Bioremediation rate
   kb <- parms$kb
@@ -189,9 +190,9 @@ rtm.PCB19 = function(t, state, parms){
   
   dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
   dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -
-    ks * Aws / Vpw * (Cpw - Cw) -
+    kpw * Aws / Vpw * (Cpw - Cw) -
     kb * Cpw
-  dCwdt <- ks * Aws / Vw * (Cpw - Cw) -
+  dCwdt <- kpw * Aws / Vw * (Cpw - Cw) -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) -
     ko * Af * L / Vw * (Cw - Cf / Kf) -
     kb * Cw # [ng/L]
@@ -213,7 +214,7 @@ rtm.PCB19 = function(t, state, parms){
   Cs0 <- Ct * M # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cpw = 0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0) # [ng/L]
-parms <- list(ro = 400, ko = 0.7, ksed = 0.001, kb = 0) # Input
+parms <- list(ro = 500, ko = 1, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
