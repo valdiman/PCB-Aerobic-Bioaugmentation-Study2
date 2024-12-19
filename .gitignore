@@ -1,4 +1,10 @@
+# RStudio-specific files
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+
+# Temporary and intermediate files
+*.Store
+Store/
+
