@@ -111,10 +111,16 @@ rtm.PCB19 = function(t, state, parms){
   
   # Bioreactor parameters
   Vw <- 100 # cm3 water volume
-  Vpw <- 50 # cm3 porewater volume
+  Vpw <- 4 # cm3 porewater volume
   Va <- 125 # cm3 headspace volumne
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
+  Apw <- 1166000 # [cm2]
+  ms <- 10 # [g]
+  n <- 0.42 # [%] porosity
+  ds <- 1540 # [g/L] sediment density
+  M <- ds * (1 - n) / n # [g/L]
+  Vs <- ms / M * 1000 # [cm3]
   
   # Congener-specific constants
   Kaw <- 0.018048667 # PCB 19 dimensionless Henry's law constant @ 25 C
@@ -137,12 +143,6 @@ rtm.PCB19 = function(t, state, parms){
   Vf <- 0.000000069 * 1000 # cm3/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 19-SPME equilibrium partition coefficient
-  
-  # Sediment partitioning
-  #M <- 0.1 # kg/L solid-water ratio
-  #foc <- 0.03 # organic carbon % in particles
-  #logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  #Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
@@ -169,6 +169,9 @@ rtm.PCB19 = function(t, state, parms){
   # iv) kaw, overall air-water mass transfer coefficient for PCB 19, units change
   kaw.o <- kaw.o * 100 * 60 * 60 * 24 # [cm/d]
   
+  # sediment desorption
+  ksed <- parms$ksed # [1/d]
+  
   # Bioremediation rate
   kb <- parms$kb
   
@@ -177,13 +180,17 @@ rtm.PCB19 = function(t, state, parms){
   ro <- parms$ro # cm/d sampling rate for PUF
   
   # derivatives dx/dt are computed below
-  Cpw <- state[1]
-  Cw <- state[2]
-  Cf <- state[3]
-  Ca <- state[4]
-  Cpuf <- state[5]
+  Cs <- state[1]
+  Cpw <- state[2]
+  Cw <- state[3]
+  Cf <- state[4]
+  Ca <- state[5]
+  Cpuf <- state[6]
   
-  dCpwdt <- - kb * Cpw - ks * Aws / Vpw * (Cpw - Cw)
+  dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
+  dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -
+    ks * Aws / Vpw * (Cpw - Cw) -
+    kb * Cpw
   dCwdt <- ks * Aws / Vw * (Cpw - Cw) -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) -
     ko * Af * L / Vw * (Cw - Cf / Kf) -
@@ -194,62 +201,55 @@ rtm.PCB19 = function(t, state, parms){
   dCpufdt <- ro * Apuf / Vpuf * (Ca - Cpuf / Kpuf) # Ca = [ng/L], Cpuf = [ng/L]
   
   # The computed derivatives are returned as a list
-  return(list(c(dCpwdt, dCwdt, dCfdt, dCadt, dCpufdt)))
+  return(list(c(dCsdt, dCpwdt, dCwdt, dCfdt, dCadt, dCpufdt)))
 }
 
 # Initial conditions and run function
 {
   Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
-  foc <- 0.03 # organic carbon % in sediment
-  Kow <- 10^(5.02) # PCB 19 octanol-water equilibrium partition coefficient
-  dUow <- -20988.94 # internal energy for the transfer of octanol-water for PCB 19 (J/mol)
-  R <- 8.3144 # J/(mol K) molar gas constant
-  Tst <- 25 #C air temperature
-  Tst.1 <- 273.15 + Tst # air and standard temperature in K, 25 C
-  Tw <- 20 # C water temperature
-  Tw.1 <- 273.15 + Tw
-  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  Kd <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-  Cpw <- Ct / Kd * 1000 # [ng/L]
+  n <- 0.42 # [%] porosity
+  ds <- 1540 # [g/L] sediment density
+  M <- ds * (1 - n) / n # [g/L]
+  Cs0 <- Ct * M # [ng/L]
 }
-cinit <- c(Cpw = Cpw, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 50, ko = 1, kb = 0.0) # Input
+cinit <- c(Cs = Cs0, Cpw = 0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0) # [ng/L]
+parms <- list(ro = 400, ko = 0.7, ksed = 0.001, kb = 0) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
 head(out.1)
 
-
+{
   # Transform Cf and Cpuf to mass/cm and mass/puf
-  out.1 <- as.data.frame(out.1)
-  colnames(out.1) <- c("time", "Cpw", "Cw", "Cf", "Ca", "Cpuf")
-  
-  # Calculate Mf and Mpuf based on volumes
-  Vpw <- 50 # [cm3]
+  df.1 <- as.data.frame(out.1)
+  colnames(df.1) <- c("time", "Cs", "Cpw", "Cw", "Cf", "Ca", "Cpuf")
+  # Calculate masses and fractions
+  ms <- 10 # [g]
+  Vpw <- 4 # [cm3]
   Vw <- 100 # [cm3]
-  Va <- 125 # [cm3]
-  Vf <- 0.000000069 # L/cm SPME
-  Vpuf <- 29 # cm3 volume of PUF
-  out.1$mpw <-  out.1$Cpw * Vpw / 1000
-  out.1$mw <- out.1$Cw * Vw / 1000
-  out.1$mf <- out.1$Cf * Vf  # [ng/cm]
-  out.1$ma <- out.1$Ca * Va / 1000
-  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000 # [ng/puf]
-  out.1$Mt <- out.1$Cpw * Vpw / 1000 + out.1$Cw * Vw / 1000 + out.1$Cf * Vf + out.1$Ca * Va / 1000 + out.1$Cpuf * Vpuf / 1000
-  out.1$fpw <- out.1$mpw / out.1$Mt * 100
-  out.1$fw <- out.1$mw / out.1$Mt * 100
-  out.1$ff <- out.1$mf / out.1$Mt * 100
-  out.1$fa <- out.1$ma / out.1$Mt * 100
-  out.1$fpuf <- out.1$mpuf / out.1$Mt * 100
+  Va <- 125 # cm3
+  Vf <- 0.000000069 * 1000 # [cm3/cm SPME]
+  Vpuf <- 29 # [cm3 volume of PUF]
+  df.1$ms <- df.1$Cs * ms / M
+  df.1$mpw <- df.1$Cpw * Vpw / 1000
+  df.1$mw <- df.1$Cw * Vw / 1000
+  df.1$mf <- df.1$Cf * Vf / 1000 # [ng]
+  df.1$ma <- df.1$Ca * Va / 1000 # [ng]
+  df.1$mpuf <- df.1$Cpuf * Vpuf / 1000 # [ng]
+  df.1$mt <- df.1$ms + df.1$mpw + df.1$mw + df.1$mf + df.1$ma + df.1$mpuf # [ng]
+  df.1$fs <- df.1$ms / df.1$mt # [ng]
+  df.1$fpw <- df.1$mpw / df.1$mt # [ng]
+  df.1$fw <- df.1$mw / df.1$mt # [ng]
+  df.1$ff <- df.1$mf / df.1$mt # [ng]
+  df.1$fa <- df.1$ma / df.1$mt # [ng]
+  df.1$fpuf <- df.1$mpuf / df.1$mt # [ng]
   
-  { 
   # Ensure observed data is in a tibble
   observed_data <- as_tibble(pcb_combined_control) %>%
     select(time, mf_Control, mpuf_Control)
   
   # Convert model results to tibble and select relevant columns
-  model_results <- as_tibble(out.1) %>%
+  model_results <- as_tibble(df.1) %>%
     mutate(time = as.numeric(time)) %>%
     select(time, mf, mpuf)
   
@@ -290,17 +290,18 @@ head(out.1)
   
   # Plot
   # Run the model with the new time sequence
-  cinit <- c(Cpw = Cpw, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
+  cinit <- c(Cs = Cs0, Cpw = 0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
   t_daily <- seq(0, 80, by = 1)  # Adjust according to your needs
-  out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB19, parms = parms)
+  out_daily <- ode(y = cinit, times = t_daily, func = rtm.PCB19,
+                   parms = parms)
   head(out_daily)
   
   # Transform Cf and Cpuf to mass/cm and mass/puf
   out.daily <- as.data.frame(out_daily)
-  colnames(out.daily) <- c("time", "Cpw", "Cw", "Cf", "Ca", "Cpuf")
+  colnames(out.daily) <- c("time", "Cs", "Cpw", "Cw", "Cf", "Ca", "Cpuf")
   
   # Calculate Mf and Mpuf based on volumes
-  out.daily$mf <- out.daily$Cf * Vf # [ng]
+  out.daily$mf <- out.daily$Cf * Vf / 1000 # [ng]
   out.daily$mpuf <- out.daily$Cpuf * Vpuf / 1000  # [ng]
   
   # Convert model results to tibble and ensure numeric values
