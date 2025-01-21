@@ -172,7 +172,7 @@ rtm.PCB19 = function(t, state, parms){
   B <- (1 + Klb400 * Mlb400)
   
   # Bioremediation rate
-  # Calibratrion study shows no sign of bioremediation
+  # Calibration study shows no sign of bioremediation
   kb <- parms$kb
   
   # Sorption and desorption rates
