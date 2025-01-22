@@ -9,3 +9,34 @@
 *.Store
 Store/
 
+# Common data file extensions to ignore
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.sav
+*.dta
+*.Rdata
+*.rds
+
+# Common figure and plot file extensions to ignore
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.tiff
+*.svg
+*.eps
+*.pdf
+
+# Ignore other common files
+*.log
+*.aux
+*.out
+*.toc
+
+# If you want to ignore all files in a specific folder, like "data" or "figures"
+data/
+figures/
+
+# Override exclusions, use !, e.g., !data/XXX.csv
