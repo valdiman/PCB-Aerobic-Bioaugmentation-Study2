@@ -160,7 +160,7 @@ rtm.PCB17 = function(t, state, parms){
   # iv) kaw, overall air-water mass transfer coefficient for PCB 17, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
-  # Bioremediation rate
+  # Bioremediation rate from calibration studies
   kb <- parms$kb
   
   # Sorption and desorption rates
