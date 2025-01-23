@@ -165,7 +165,7 @@ rtm.PCB17 = function(t, state, parms){
   # phospholipids %s
   # From UFZ-LSER database (calculate the biopartitioning)
   # 60 % protein, 5 % lipids, 5 % phospholipids, 30 % water
-  Klb400 <- 10^(4.39) # [Lw/Lcell]
+  Klb400 <- 10^(4.84) # [Lw/Lcell]
   Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
   Vlb400 <- 1 # [um3/cell]
   Mlb400 <- Clb400 * Vlb400 * 10^-12 # [Llb400/Lw]
@@ -198,7 +198,7 @@ rtm.PCB17 = function(t, state, parms){
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw - kblb400 * (t <= 7) * Cw # [ng/L]
+    kb * Cw - kblb400 * Cw # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -216,7 +216,7 @@ rtm.PCB17 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
 parms <- list(ro = 540.409, ko = 10, kdf = 1.25, kds = 0.001, f = 0.8,
-              ka = 190, kb = 1, kblb400 = 60) # Input. From SPME calibration study, a decrease in PCB17 is seen.
+              ka = 190, kb = 1, kblb400 = 15) # Input. From SPME calibration study, a decrease in PCB17 is seen.
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
