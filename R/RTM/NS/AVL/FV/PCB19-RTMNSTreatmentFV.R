@@ -112,7 +112,7 @@ rtm.PCB19 = function(t, state, parms){
   # Bioreactor parameters
   Vw <- 100 # cm3 water volume
   Vpw <- 4 # cm3 porewater volume
-  Va <- 125 # cm3 headspace volumne
+  Va <- 125 # cm3 headspace volume
   Aaw <- 20 # cm2 
   Aws <- 30 # cm2
   Apw <- 1166000 # [cm2]
