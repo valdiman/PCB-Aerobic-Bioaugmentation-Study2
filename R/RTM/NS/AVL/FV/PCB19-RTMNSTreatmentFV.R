@@ -222,13 +222,13 @@ rtm.PCB19 = function(t, state, parms){
 # Initial conditions and run function
 {
   Ct <- 259.8342356 # ng/g PCB 19 sediment concentration
-  n <- 0.42 # [%] porosity
+  n <- 0.46 # [%] porosity
   ds <- 1540 # [g/L] sediment density
   M <- ds * (1 - n) / n # [g/L]
   Cs0 <- Ct * M # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cpw = 0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0) # [ng/L]
-parms <- list(ro = 500, ko = 10, kb = 0) # Input
+parms <- list(ro = 500, ko = 6, kb = 0) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB19, parms = parms)
