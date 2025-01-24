@@ -117,7 +117,7 @@ rtm.PCB19 = function(t, state, parms){
   Aws <- 30 # cm2
   Apw <- 1166000 # [cm2]
   ms <- 10 # [g]
-  n <- 0.42 # [%] porosity
+  n <- 0.46 # [%] porosity
   ds <- 1540 # [g/L] sediment density
   M <- ds * (1 - n) / n # [g/L]
   Vs <- ms / M * 1000 # [cm3]
