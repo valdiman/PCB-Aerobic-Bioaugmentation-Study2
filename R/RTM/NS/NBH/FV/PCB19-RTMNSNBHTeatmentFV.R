@@ -197,6 +197,7 @@ rtm.PCB19 = function(t, state, parms){
   
   Cpw <- Cpw / B
   Cw <- Cw / B
+  Cf <- Cf / (B * 0.18)
   
   dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
   dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -
@@ -375,6 +376,6 @@ head(out.1)
 p.19 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/PCB19NBH_NS_TreatmentFV.png", plot = p.19, width = 6,
+ggsave("Output/Plots/RTM/NS/NBH/PCB19NBH_NS_TreatmentFV.png", plot = p.19, width = 6,
        height = 5, dpi = 500)
 

@@ -363,6 +363,6 @@ head(out.1)
 p.19 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
 # Save plot in folder
-ggsave("Output/Plots/RTM/PCB19NBH_NS_ControlFV.png", plot = p.19, width = 6,
+ggsave("Output/Plots/RTM/NS/NBH/PCB19NBH_NS_ControlFV.png", plot = p.19, width = 6,
        height = 5, dpi = 500)
 
