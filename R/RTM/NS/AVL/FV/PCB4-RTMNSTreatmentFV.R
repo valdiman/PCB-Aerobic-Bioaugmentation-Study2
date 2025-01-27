@@ -202,6 +202,7 @@ rtm.PCB4 = function(t, state, parms){
   
   Cpw <- Cpw / B
   Cw <- Cw / B
+  Cf <- Cf / (B * 0.3)
   
   dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
   dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -
@@ -327,7 +328,7 @@ head(out.1)
     select(time, mf, mpuf)
   
   # Export data
-  write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB4AVLSTreatmentFV.csv")
+  #write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB4AVLSTreatmentFV.csv")
   
   # Prepare model data for plotting
   model_data_long <- model_results_daily_clean %>%
