@@ -206,7 +206,7 @@ rtm.PCB4 = function(t, state, parms){
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw - kblb400 * Cw # [ng/L]
+    kb * Cw - kblb400 * Cw * (t < 5) # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -356,6 +356,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
   theme_bw() +
   theme(legend.title = element_blank())
 }
+
 # Arrange plots side by side
 p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 

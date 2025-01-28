@@ -350,6 +350,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
   theme_bw() +
   theme(legend.title = element_blank())
 }
+
 # Arrange plots side by side
 p.4 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 
