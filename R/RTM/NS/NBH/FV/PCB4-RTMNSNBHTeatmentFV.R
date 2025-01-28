@@ -113,7 +113,7 @@ rtm.PCB4 = function(t, state, parms){
   Aws <- 30 # cm2
   Apw <- 1166000 # [cm2]
   ms <- 10 # [g]
-  n <- 0.46 # [%] porosity
+  n <- 0.42 # [%] porosity
   ds <- 1540 # [g/L] sediment density
   M <- ds * (1 - n) / n # [g/L]
   Vs <- ms / M * 1000 # [cm3]
@@ -166,7 +166,7 @@ rtm.PCB4 = function(t, state, parms){
   kaw.o <- kaw.o * 100 * 60 * 60 * 24 # [cm/d]
   
   # Sediment-porewater radial diffusion model (ksed)
-  logksed <- -0.832 * log10(Kow.t) + 1.34 # [1/d] From Koelmans et al, Environ. Sci. Technol. 2010, 44, 3014–3020
+  logksed <- -0.832 * log10(Kow.t) + 1.27 # [1/d] From Koelmans et al, Environ. Sci. Technol. 2010, 44, 3014–3020
   ksed <- 10^(logksed)
   
   # Add PCB sorption to LB400 (~ bioavailability factor)
@@ -196,8 +196,8 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[5]
   Cpuf <- state[6]
   
-  #Cpw <- Cpw / B
-  #Cw <- Cw / B
+  Cpw <- Cpw / B
+  Cw <- Cw / B
   Cf <- Cf / (B * 0.18)
   
   dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
@@ -221,13 +221,13 @@ rtm.PCB4 = function(t, state, parms){
 # Estimating Cpw (PCB 4 concentration in sediment porewater)
 {
   Ct <- 314.263 # ng/g PCB 4 sediment concentration
-  n <- 0.46 # [%] porosity
+  n <- 0.42 # [%] porosity
   ds <- 1540 # [g/L] sediment density
   M <- ds * (1 - n) / n # [g/L]
   Cs0 <- Ct * M # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cpw = 0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0) # [ng/L]
-parms <- list(ro = 500, ko = 6, kb = 0.0, kblb400 = 0.6) # Input
+parms <- list(ro = 500, ko = 6, kb = 0.0, kblb400 = 0.4) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)

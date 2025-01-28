@@ -113,7 +113,7 @@ rtm.PCB19 = function(t, state, parms){
   Aws <- 30 # cm2
   Apw <- 1166000 # [cm2]
   ms <- 10 # [g]
-  n <- 0.46 # [%] porosity
+  n <- 0.42 # [%] porosity
   ds <- 1540 # [g/L] sediment density
   M <- ds * (1 - n) / n # [g/L]
   Vs <- ms / M * 1000 # [cm3]
@@ -166,7 +166,7 @@ rtm.PCB19 = function(t, state, parms){
   kaw.o <- kaw.o * 100 * 60 * 60 * 24 # [cm/d]
   
   # Sediment-porewater radial diffusion model (ksed)
-  logksed <- -0.832 * log10(Kow.t) + 1.34 # [1/d] From Koelmans et al, Environ. Sci. Technol. 2010, 44, 3014–3020
+  logksed <- -0.832 * log10(Kow.t) + 1.4 # [1/d] From Koelmans et al, Environ. Sci. Technol. 2010, 44, 3014–3020
   ksed <- 10^(logksed)
   
   # Bioremediation rate
@@ -204,7 +204,7 @@ rtm.PCB19 = function(t, state, parms){
 # Initial conditions and run function
 {
   Ct <- 230.6708 # ng/g PCB 19 sediment concentration
-  n <- 0.46 # [%] porosity
+  n <- 0.42 # [%] porosity
   ds <- 1540 # [g/L] sediment density
   M <- ds * (1 - n) / n # [g/L]
   Cs0 <- Ct * M # [ng/L]

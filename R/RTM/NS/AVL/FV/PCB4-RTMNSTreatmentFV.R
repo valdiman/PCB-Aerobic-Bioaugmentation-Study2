@@ -117,7 +117,7 @@ rtm.PCB4 = function(t, state, parms){
   Aws <- 30 # cm2
   Apw <- 1166000 # [cm2]
   ms <- 10 # [g]
-  n <- 0.42 # [%] porosity
+  n <- 0.46 # [%] porosity
   ds <- 1540 # [g/L] sediment density
   M <- ds * (1 - n) / n # [g/L]
   Vs <- ms / M * 1000 # [cm3]
@@ -328,7 +328,7 @@ head(out.1)
     select(time, mf, mpuf)
   
   # Export data
-  #write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB4AVLSTreatmentFV.csv")
+  write.csv(model_results_daily_clean, file = "Output/Data/RTM/NS/AVL/PCB4AVLSTreatmentFV.csv")
   
   # Prepare model data for plotting
   model_data_long <- model_results_daily_clean %>%

@@ -170,7 +170,7 @@ rtm.PCB19 = function(t, state, parms){
   kaw.o <- kaw.o * 100 * 60 * 60 * 24 # [cm/d]
   
   # Sediment-porewater radial diffusion model (ksed)
-  logksed <- -0.832 * log10(Kow.t) + 1.34 # [1/d] From Koelmans et al, Environ. Sci. Technol. 2010, 44, 3014–3020
+  logksed <- -0.832 * log10(Kow.t) + 1.3 # [1/d] From Koelmans et al, Environ. Sci. Technol. 2010, 44, 3014–3020
   ksed <- 10^(logksed)
   
   # Add PCB sorption to LB400 (~ bioavailability factor)
