@@ -115,8 +115,8 @@ rtm.PCB4 = function(t, state, parms){
   # Congener-specific constants
   Kaw <- 0.01344142 # PCB 4 dimensionless Henry's law constant @ 25 C
   dUaw <- 49662.48 # internal energy for the transfer of air-water for PCB 4 (J/mol)
+  Kaw.t <- Kaw*exp(-dUaw / R * (1 / Tw.1 - 1 / Tst.1)) * Tw.1 / Tst.1
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
-  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
   dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
   Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
   Koa <- 10^(6.789298102) # PCB 4 octanol-air equilibrium partition coefficient
@@ -145,15 +145,13 @@ rtm.PCB4 = function(t, state, parms){
   SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 4
   
   # kaw calculations (air-water mass transfer coefficient)
-  # i) Ka.w.t, ka.w corrected by water and air temps during experiment
-  Kaw.t <- Kaw*exp(-dUaw/R*(1/Tw.1-1/Tst.1))*Tw.1/Tst.1
-  # ii) Kaw.a, air-side mass transfer coefficient
+  # i) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
-  # iii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
+  # ii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
   Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
-  # iv) kaw, overall air-water mass transfer coefficient for PCB 4
+  # iii) kaw, overall air-water mass transfer coefficient for PCB 4
   kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
-  # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
+  # iv) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Add PCB sorption to LB400 (~ bioavailability factor)
@@ -161,7 +159,7 @@ rtm.PCB4 = function(t, state, parms){
   # phospholipids %s
   # From UFZ-LSER database (calculate the biopartitioning)
   # 60 % protein, 5 % lipids, 5 % phospholipids, 30 % water
-  Klb400 <- 10^(3.85) # [Lw/Lcell]
+  Klb400 <- 10^(4.28) # [Lw/Lcell]
   Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
   Vlb400 <- 1 # [um3/cell]
   Mlb400 <- Clb400 * Vlb400 * 10^-12 # [Llb400/Lw]
@@ -213,7 +211,7 @@ rtm.PCB4 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
 parms <- list(ro = 540.409, ko = 10, kdf = 3.6, kds = 0.001, f = 0.8,
-              ka = 90, kb = 1, kblb400 = 15) # Input
+              ka = 90, kb = 1, kblb400 = 17) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
@@ -226,16 +224,20 @@ colnames(out.1) <- c("time", "Cs", "Cw", "Cf", "Ca", "Cpuf")
 
 # Calculate masses based on volumes
 {
-  Vw <- 100 # cm3
-  Va <- 125 # cm3
-  Vf <- 0.000000069 # L/cm, SPME volume/area
-  Vpuf <- 29 # cm3, volume of PUF
-  out.1$ms <- out.1$Cs * Vw / 1000
-  out.1$mw <- out.1$Cw * Vw / 1000
-  out.1$ma <- out.1$Ca * Va / 1000
-  out.1$mf <- out.1$Cf * Vf # [ng/cm]
+  ms <- 10 # [g]
+  M <- 0.1 # kg/L solid-water ratio
+  Vw <- 100 # [cm3]
+  Va <- 125 # [cm3]
+  Vf <- 0.000000069 # L/cm SPME
+  Vpuf <- 29 # cm3 volume of PUF
+  out.1$mf <- out.1$Cf * Vf  # [ng/cm]
   out.1$mpuf <- out.1$Cpuf * Vpuf / 1000  # [ng/puf]
-  out.1$Mt <- out.1$ms + out.1$mw + out.1$ma + out.1$mf + out.1$mpuf
+  out.1$Mt <- out.1$Cs * ms / (M * 1000) + out.1$Cw * Vw / 1000 + out.1$Cf * Vf + out.1$Ca * Va / 1000 + out.1$Cpuf * Vpuf / 1000
+  out.1$fs <- out.1$Cs * ms / (M * 1000) / out.1$Mt * 100
+  out.1$fw <- out.1$Cw * Vw / 1000 / out.1$Mt * 100
+  out.1$ff <- out.1$Cf * Vf / out.1$Mt * 100
+  out.1$fa <- out.1$Ca * Va / 1000 / out.1$Mt * 100
+  out.1$fpuf <- out.1$Cpuf * Vpuf / 1000 / out.1$Mt * 100
 }
 
 # Ensure observed data is in a tibble

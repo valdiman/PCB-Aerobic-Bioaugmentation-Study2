@@ -124,7 +124,7 @@ rtm.PCB17 = function(t, state, parms){
   # PUF constants 
   Apuf <- 7.07 # cm2
   Vpuf <- 29 # cm3 volume of PUF
-  d <- 0.0213*100^3 # g/m3 density of PUF
+  d <- 21300 # g/m3 density of PUF
   Kpuf <- 10^(0.6366 * log10(Koa) - 3.1774) # PCB 17-PUF equilibrium partition coefficient [m3/g]
   Kpuf <- Kpuf * d
   
@@ -133,12 +133,6 @@ rtm.PCB17 = function(t, state, parms){
   Vf <- 0.000000069 * 1000 # cm3/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 17-SPME equilibrium partition coefficient
-  
-  # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
@@ -216,7 +210,7 @@ rtm.PCB17 = function(t, state, parms){
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
 parms <- list(ro = 540.409, ko = 10, kdf = 1.25, kds = 0.001, f = 0.8,
-              ka = 190, kb = 1, kblb400 = 15) # Input. From SPME calibration study, a decrease in PCB17 is seen.
+              ka = 190, kb = 1, kblb400 = 17) # Input. From SPME calibration study, a decrease in PCB17 is seen.
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB17, parms = parms)
