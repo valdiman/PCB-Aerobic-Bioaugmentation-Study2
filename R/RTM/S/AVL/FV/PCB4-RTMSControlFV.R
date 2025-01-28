@@ -115,6 +115,7 @@ rtm.PCB4 = function(t, state, parms){
   # Congener-specific constants
   Kaw <- 0.01344142 # PCB 4 dimensionless Henry's law constant @ 25 C
   dUaw <- 49662.48 # internal energy for the transfer of air-water for PCB 4 (J/mol)
+  Kaw.t <- Kaw*exp(-dUaw / R * (1 / Tw.1 - 1 / Tst.1)) * Tw.1 / Tst.1
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
   dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
   Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
@@ -133,19 +134,6 @@ rtm.PCB4 = function(t, state, parms){
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 4-SPME equilibrium partition coefficient [Lf/Lw]
   
-  # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # Lw/kg sediment-water equilibrium partition coefficient
-  
-  # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-  
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
   D.co2.w <- 1.67606E-05 # cm2/s CO2's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars 
@@ -157,15 +145,13 @@ rtm.PCB4 = function(t, state, parms){
   SC.pcb.w <- v.H2O/D.pcb.water # Schmidt number PCB 4
 
   # kaw calculations (air-water mass transfer coefficient)
-  # i) Ka.w.t, ka.w corrected by water and air temps during experiment
-  Kaw.t <- Kaw*exp(-dUaw/R*(1/Tw.1-1/Tst.1))*Tw.1/Tst.1
-  # ii) Kaw.a, air-side mass transfer coefficient
+  # i) Kaw.a, air-side mass transfer coefficient
   Kaw.a <- V.water.air*(D.pcb.air/D.water.air)^(0.67) # [m/s]
-  # iii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
+  # ii) Kaw.w, water-side mass transfer coefficient for PCB 4. 600 is the Schmidt number of CO2 at 298 K
   Kaw.w <- V.co2.w*(SC.pcb.w/600)^(-0.5) # [m/s]
-  # iv) kaw, overall air-water mass transfer coefficient for PCB 4
+  # iii) kaw, overall air-water mass transfer coefficient for PCB 4
   kaw.o <- (1/(Kaw.a*Kaw.t) + (1/Kaw.w))^-1 # [m/s]
-  # v) kaw, overall air-water mass transfer coefficient for PCB 4, units change
+  # iv) kaw, overall air-water mass transfer coefficient for PCB 4, units change
   kaw.o <- kaw.o*100*60*60*24 # [cm/d]
   
   # Bioremediation rate
@@ -216,6 +202,7 @@ t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
+
 {
 # Transform Cf and Cpuf to mass/cm and mass/puf
 out.1 <- as.data.frame(out.1)
@@ -300,7 +287,7 @@ model_results_daily_clean <- as_tibble(out.daily) %>%
   select(time, mf, mpuf)
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4SControlFV.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4AVLControlFV.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%

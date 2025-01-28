@@ -227,10 +227,20 @@ out.1 <- as.data.frame(out.1)
 colnames(out.1) <- c("time", "Cs", "Cw", "Cf", "Ca", "Cpuf")
 
 # Calculate Mf and Mpuf based on volumes
-Vf <- 0.000000069 # L/cm, SPME volume/area
-Vpuf <- 29 # cm3, volume of PUF
+ms <- 10 # [g]
+M <- 0.1 # kg/L solid-water ratio
+Vw <- 100 # [cm3]
+Va <- 125 # [cm3]
+Vf <- 0.000000069 # L/cm SPME
+Vpuf <- 29 # cm3 volume of PUF
 out.1$mf <- out.1$Cf * Vf  # [ng/cm]
 out.1$mpuf <- out.1$Cpuf * Vpuf / 1000  # [ng/puf]
+out.1$Mt <- out.1$Cs * ms / (M * 1000) + out.1$Cw * Vw / 1000 + out.1$Cf * Vf + out.1$Ca * Va / 1000 + out.1$Cpuf * Vpuf / 1000
+out.1$fs <- out.1$Cs * ms / (M * 1000) / out.1$Mt * 100
+out.1$fw <- out.1$Cw * Vw / 1000 / out.1$Mt * 100
+out.1$ff <- out.1$Cf * Vf / out.1$Mt * 100
+out.1$fa <- out.1$Ca * Va / 1000 / out.1$Mt * 100
+out.1$fpuf <- out.1$Cpuf * Vpuf / 1000 / out.1$Mt * 100
 
 # Ensure observed data is in a tibble
 observed_data <- as_tibble(pcb_combined_treatment) %>%
@@ -297,7 +307,7 @@ model_results_daily_clean <- as_tibble(out.daily) %>%
   select(time, mf, mpuf)
 
 # Export data
-#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB17STreatment.csv")
+#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB17AVLTreatment.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
@@ -347,6 +357,7 @@ p_mpuf <- ggplot(plot_data_daily %>% filter(variable == "mpuf"), aes(x = time)) 
   theme_bw() +
   theme(legend.title = element_blank())
 }
+
 # Arrange plots side by side
 p.17 <- grid.arrange(p_mf, p_mpuf, ncol = 2)
 

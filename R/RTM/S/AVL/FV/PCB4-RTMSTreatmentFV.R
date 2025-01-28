@@ -116,6 +116,7 @@ rtm.PCB4 = function(t, state, parms){
   Kaw <- 0.01344142 # PCB 4 dimensionless Henry's law constant @ 25 C
   dUaw <- 49662.48 # internal energy for the transfer of air-water for PCB 4 (J/mol)
   Kow <- 10^(4.65) # PCB 4 octanol-water equilibrium partition coefficient
+  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
   dUow <-  -21338.96 # internal energy for the transfer of octanol-water for PCB 4 (J/mol)
   Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
   Koa <- 10^(6.789298102) # PCB 4 octanol-air equilibrium partition coefficient
@@ -132,19 +133,6 @@ rtm.PCB4 = function(t, state, parms){
   Vf <- 0.000000069 * 1000 # cm3/cm SPME volume/area
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 4-SPME equilibrium partition coefficient [Lf/Lw]
-  
-  # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # Lw/kg sediment-water equilibrium partition coefficient
-  
-  # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  Kow.t <- Kow*exp(-dUow / R * (1 / Tw.1 -  1/ Tst.1))
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
   
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
@@ -206,7 +194,7 @@ rtm.PCB4 = function(t, state, parms){
   dCwdt <- - ka * Cw + f * kdf * Cs + (1 - f) * kds * Cs -
     kaw.o * Aaw / Vw * (Cw - Ca / Kaw.t) - 
     ko * Af * L / Vw * (Cw - Cf / Kf) -
-    kb * Cw - kblb400 * Cw * (t < 5) # [ng/L]
+    kb * Cw - kblb400 * Cw # [ng/L]
   dCfdt <- ko * Af / Vf * (Cw - Cf / Kf) # Cw = [ng/L], Cf = [ng/L]
   dCadt <- kaw.o * Aaw / Va * (Cw - Ca / Kaw.t) -
     ro * Apuf / Va * (Ca - Cpuf / Kpuf) # Ca = [ng/L]
@@ -224,22 +212,31 @@ rtm.PCB4 = function(t, state, parms){
   Cs0 <- Ct * M * 1000 # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0)
-parms <- list(ro = 540.409, ko = 10, kdf = 3.8, kds = 0.001, f = 0.8,
-              ka = 90, kb = 1, kblb400 = 22) # Input
+parms <- list(ro = 540.409, ko = 10, kdf = 3.6, kds = 0.001, f = 0.8,
+              ka = 90, kb = 1, kblb400 = 15) # Input
 t.1 <- unique(pcb_combined_treatment$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
 head(out.1)
+
 {
 # Transform Cf and Cpuf to mass/cm and mass/puf
 out.1 <- as.data.frame(out.1)
 colnames(out.1) <- c("time", "Cs", "Cw", "Cf", "Ca", "Cpuf")
 
-# Calculate Mf and Mpuf based on volumes
-Vf <- 0.000000069 # L/cm, SPME volume/area
-Vpuf <- 29 # cm3, volume of PUF
-out.1$mf <- out.1$Cf * Vf # [ng]
-out.1$mpuf <- out.1$Cpuf * Vpuf / 1000  # [ng]
+# Calculate masses based on volumes
+{
+  Vw <- 100 # cm3
+  Va <- 125 # cm3
+  Vf <- 0.000000069 # L/cm, SPME volume/area
+  Vpuf <- 29 # cm3, volume of PUF
+  out.1$ms <- out.1$Cs * Vw / 1000
+  out.1$mw <- out.1$Cw * Vw / 1000
+  out.1$ma <- out.1$Ca * Va / 1000
+  out.1$mf <- out.1$Cf * Vf # [ng/cm]
+  out.1$mpuf <- out.1$Cpuf * Vpuf / 1000  # [ng/puf]
+  out.1$Mt <- out.1$ms + out.1$mw + out.1$ma + out.1$mf + out.1$mpuf
+}
 
 # Ensure observed data is in a tibble
 observed_data <- as_tibble(pcb_combined_treatment) %>%
@@ -306,7 +303,7 @@ model_results_daily_clean <- as_tibble(out.daily) %>%
   select(time, mf, mpuf)
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4STreatmentFV.csv")
+write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB4AVLTreatmentFV.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%

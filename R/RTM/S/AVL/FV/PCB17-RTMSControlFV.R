@@ -134,12 +134,6 @@ rtm.PCB17 = function(t, state, parms){
   L <- 1 # cm SPME length normalization to 1 cm
   Kf <- 10^(1.06 * log10(Kow.t) - 1.16) # PCB 17-SPME equilibrium partition coefficient
   
-  # Sediment partitioning
-  M <- 0.1 # kg/L solid-water ratio
-  foc <- 0.03 # organic carbon % in particles
-  logKoc <- 0.94 * log10(Kow.t) + 0.42 # koc calculation
-  K <- foc * 10^(logKoc) # L/kg sediment-water equilibrium partition coefficient
-  
   # Air & water physical conditions
   D.water.air <- 0.2743615 # cm2/s water's diffusion coefficient in the gas phase @ Tair = 25 C, patm = 1013.25 mbars 
   D.co2.w <- 1.67606E-05 # cm2/s CO2's diffusion coefficient in water @ Tair = 25 C, patm = 1013.25 mbars 
@@ -293,7 +287,7 @@ model_results_daily_clean <- as_tibble(out.daily) %>%
   select(time, mf, mpuf)
 
 # Export data
-write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB17SControlFV.csv")
+#write.csv(model_results_daily_clean, file = "Output/Data/RTM/S/AVL/PCB17AVLControlFV.csv")
 
 # Prepare model data for plotting
 model_data_long <- model_results_daily_clean %>%
