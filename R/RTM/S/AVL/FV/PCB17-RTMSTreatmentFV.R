@@ -159,9 +159,9 @@ rtm.PCB17 = function(t, state, parms){
   # phospholipids %s
   # From UFZ-LSER database (calculate the biopartitioning)
   # 60 % protein, 5 % lipids, 5 % phospholipids, 30 % water
-  Klb400 <- 10^(4.84) # [Lw/Lcell]
-  Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
-  Vlb400 <- 1 # [um3/cell]
+  Klb400 <- 10^(4.84) # [Lw/Llb400]
+  Clb400 <- 0.8 * 8 * 10^8 # [lb400/mL]
+  Vlb400 <- 1 # [um3/lb400]
   Mlb400 <- Clb400 * Vlb400 * 10^-12 # [Llb400/Lw]
   B <- (1 + Klb400 * Mlb400)
 
