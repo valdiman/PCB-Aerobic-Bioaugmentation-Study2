@@ -1,7 +1,11 @@
 
+# Install packages
 install.packages("minpack.lm")
-library(minpack.lm)
+install.packages("deSolve")
 
+# Load libraries
+library(minpack.lm)
+library(deSolve) # solving differential equations
 
 # Define the objective function
 objective_function <- function(params) {
