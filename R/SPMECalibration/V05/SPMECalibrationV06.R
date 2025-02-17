@@ -128,11 +128,6 @@ plot(observed_data$time, observed_data$mf, col = "blue", pch = 19, xlab = "Time"
 lines(model_output[, "time"], model_output[, "mf"], col = "red", lwd = 2)
 legend("topright", legend = c("Observed", "Modeled"), col = c("blue", "red"), pch = c(19, NA), lty = c(NA, 1))
 
-
-
-
-
-
 # Define the system of differential equations
 SPMEUptake <- function(t, state, parameters) {
     
