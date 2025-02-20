@@ -1,5 +1,5 @@
 # Code to model PCB 19 in laboratory experiments
-# using sediment from Altavista, VI. Passive measurements
+# using sediment from NBH. Passive measurements
 # of PCB 19 in the water and the air phases are predicted and
 # linked to the water and air concentrations from the passive
 # samplers.
@@ -178,7 +178,7 @@ rtm.PCB19 = function(t, state, parms){
   Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
   Vlb400 <- 1 # [um3/cell]
   Mlb400 <- Clb400 * Vlb400 * 10^-12# [Llb400/Lw]
-  B <- (1 + Klb400 * Mlb400)
+  B <- Vw / (Vw + Klb400 * Mlb400 * 100)
   
   # Bioremediation rate
   kb <- parms$kb
@@ -196,9 +196,9 @@ rtm.PCB19 = function(t, state, parms){
   Ca <- state[5]
   Cpuf <- state[6]
   
-  Cpw <- Cpw / B
-  Cw <- Cw / B
-  Cf <- Cf / (B * 0.18)
+  Cpw <- Cpw * B
+  Cw <- Cw * B
+  Cf <- Cf * 0.025 / B
   
   dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
   dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -

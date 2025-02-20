@@ -182,7 +182,7 @@ rtm.PCB4 = function(t, state, parms){
   Clb400 <- 0.8 * 8 * 10^8 # [cell/mL]
   Vlb400 <- 1 # [um3/cell]
   Mlb400 <- Clb400 * Vlb400 * 10^-12# [Llb400/Lw]
-  B <- (1 + Klb400 * Mlb400)
+  B <- Vw/ (Vw + Klb400 * Mlb400 * Vw)
   
   # Bioremediation rate
   kb <- parms$kb
@@ -200,9 +200,9 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[5]
   Cpuf <- state[6]
   
-  Cpw <- Cpw / B
-  Cw <- Cw / B
-  Cf <- Cf / (B * 0.3)
+  #Cpw <- Cpw * B
+  #Cw <- Cw * B
+  Cf <- Cf * 0.025 / B
   
   dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
   dCpwdt <- ksed * Vs / Vpw * (Cs - Cpw) -
@@ -231,7 +231,7 @@ rtm.PCB4 = function(t, state, parms){
   Cs0 <- Ct * M # [ng/L]
 }
 cinit <- c(Cs = Cs0, Cpw = 0, Cw = 0, Cf = 0, Ca = 0, Cpuf = 0) # [ng/L]
-parms <- list(ro = 500, ko = 6, kb = 0.2, kblb400 = 0.6) # Input
+parms <- list(ro = 500, ko = 6, kb = 0.3, kblb400 = 0.6) # Input
 t.1 <- unique(pcb_combined_control$time)
 # Run the ODE function without specifying parms
 out.1 <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
