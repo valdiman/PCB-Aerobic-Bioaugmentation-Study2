@@ -200,8 +200,8 @@ rtm.PCB4 = function(t, state, parms){
   Ca <- state[5]
   Cpuf <- state[6]
   
-  #Cpw <- Cpw * B
-  #Cw <- Cw * B
+  Cpw <- Cpw * B
+  Cw <- Cw * B
   Cf <- Cf * 0.025 / B
   
   dCsdt <- - ksed * (Cs - Cpw) # Desorption from sediment to porewater
