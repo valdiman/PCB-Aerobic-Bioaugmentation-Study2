@@ -3,6 +3,12 @@ This model simulates the concentration of congener-specific PCBs in both the aqu
 
 Additionally, the model can simulate the reduction in volatile PCB release from sediment to air due to the presence of an aerobic PCB-degrading microorganism, with a known biotransformation rate for PCBs.
 
+--------------------------
+SHARING/ACCESS/ATTRIBUTION LICENSE INFORMATION
+--------------------------
+
+Licenses/restrictions: licensed under the 2-Clause BSD License - see the [LICENSE](LICENSE) file for details.
+
 ----------------------
 General Information
 ----------------------
@@ -30,12 +36,6 @@ Subject: Polychlorinated Biphenyls; Contaminant fate and transport; Paraburkhold
 
 GeoLocation: The sediment used in this study was taken from a PCB-contaminated emergency overflow lagoon located in Altavista, VA (37°06'52"N, 79°16'21"W), and New Bedford Harbor, MA. Laboratory and analytical work was done at the University of Iowa in Iowa City, IA, USA.
 
---------------------------
-SHARING/ACCESS/ATTRIBUTION LICENSE INFORMATION
---------------------------
-
-Licenses/restrictions: licensed under the 2-Clause BSD License - see the [LICENSE](LICENSE) file for details.
-
 --------
 PREREQUISITES & DEPENDENCIES
 --------
@@ -61,9 +61,13 @@ This section of the ReadMe file provides short instructions on how to download a
 R FILES AND STRUCTURE
 --------
 It is recommended to create a project in R (e.g., PCB-Aerobic-Bioaugmentation-Study2.Rproj). Download the project file (.Rproj) and the R subfolder where the scripts are located, and the Subfolders.R file. Run first the Subfolder.R file, which will generate all the subfolders for this project.
-The structure of this project includes an R subfolder where all the R scripts are located, as previously indicated. There is a Data subfolder under Data, where the observations obtained from the laboratory measurements SPME and PUF are going to be storaged.
+The structure of this project includes an R subfolder where all the R scripts are located, as previously indicated. There is a Data subfolder where the data are storage, and then an Output subfolder, where the results are located.
 
+--------
+Data
+--------
 
+SPME and PUF data for individual PCB4 and PCB19 are found in IRO:XXX. File 06_Dataset_final_PCBmass.csv needs to be download it and save it in the Data folder of the project.
 
 
 
