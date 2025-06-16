@@ -25,17 +25,11 @@ install.packages("gridExtra")
 
 # Read data ---------------------------------------------------------------
 {
-  exp.data.SPME <- read.csv("Data/SPME_data_long.csv")
-  exp.data.PUF <- read.csv("Data/PUF_data_long.csv")
-  # Add sampler
-  exp.data.SPME$sampler <- "SPME"
-  exp.data.PUF$sampler <- "PUF"
-  # Combine
-  exp.data <- rbind(exp.data.PUF, exp.data.SPME)
+  exp.data <- read.csv("Data/06_Dataset_final_PCBmass.csv")
   # Select individual congener from datasets
   pcb.ind <- "PCB_19"
-  # Extract relevant columns from each dataset
-  pcbi <- exp.data[, c("ID", "Group", "time", "sampler", pcb.ind)]
+  # Extract relevant columns
+  pcbi <- exp.data[, c("ID", "Group", "time", "Sample_medium", pcb.ind)]
 }
 
 # Organize data -----------------------------------------------------------
@@ -45,28 +39,20 @@ install.packages("gridExtra")
   # Pull congener-specific data from the dataset without averaging
   # Select SPME control samples
   pcbi.spme.control <- pcbi %>%
-    filter(ID == "AVL_S", Group == "Control", sampler == "SPME") %>%
+    filter(ID == "AVL_S", Group == "Control", Sample_medium == "SPME") %>%
     rename("mf_Control" = PCB_19)
   # Select SPME treatment samples
   pcbi.spme.treatment <- pcbi %>%
-    filter(ID == "AVL_S", Group == "Treatment", sampler == "SPME") %>%
+    filter(ID == "AVL_S", Group == "Treatment", Sample_medium == "SPME") %>%
     rename("mf_Treatment" = PCB_19)
   # Select PUF control samples
   pcbi.puf.control <- pcbi %>%
-    filter(ID == "AVL_S", Group == "Control", sampler == "PUF") %>%
+    filter(ID == "AVL_S", Group == "Control", Sample_medium == "PUF") %>%
     rename("mpuf_Control" = PCB_19)
-  
-  # Multiply mpuf_Control by 10
-  pcbi.puf.control$mpuf_Control <- pcbi.puf.control$mpuf_Control * 10
-  
   # Select PUF treatment samples
   pcbi.puf.treatment <- pcbi %>%
-    filter(ID == "AVL_S", Group == "Treatment", sampler == "PUF") %>%
+    filter(ID == "AVL_S", Group == "Treatment", Sample_medium == "PUF") %>%
     rename("mpuf_Treatment" = PCB_19)
-  
-  # Multiply mpuf_Treatment by 10
-  pcbi.puf.treatment$mpuf_Treatment <- pcbi.puf.treatment$mpuf_Treatment * 10
-  
   # Combine the mf and mpuf data for Control
   pcb_combined_control <- cbind(
     pcbi.spme.control %>%
