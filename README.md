@@ -67,5 +67,5 @@ The structure of this project includes an R subfolder where all the R scripts ar
 Data
 --------
 
-SPME and PUF data for individual PCB4 and PCB19 can be found in IRO:XXX. The file 06_Dataset_final_PCBmass.csv needs to be downloaded and saved in the Data folder of the project.
+SPME and PUF data for individual PCB4 and PCB19 can be found at https://doi.org/10.25820/data.007563. The file 06_Dataset_final_PCBmass.csv needs to be downloaded and saved in the Data folder of the project.
 
