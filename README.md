@@ -9,6 +9,8 @@ SHARING/ACCESS/ATTRIBUTION LICENSE INFORMATION
 
 Licenses/restrictions: licensed under the 2-Clause BSD License - see the [LICENSE](LICENSE) file for details.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16368721.svg)](https://doi.org/10.5281/zenodo.16368721)
+
 ----------------------
 General Information
 ----------------------
