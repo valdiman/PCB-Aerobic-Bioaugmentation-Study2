@@ -1,5 +1,7 @@
 # General optimization function
-# Some lines need to be run from individual modeling codes
+# From the individual codes in the folder AVL
+# needs to run the Read data, Organize data, Reactive transport function sections,
+# Estimating Cpw, Cinit, and t.1, and observed_data lines. 
 
 # Install packages
 install.packages("minpack.lm")
@@ -25,7 +27,7 @@ objective_function <- function(params) {
                 f = 0.8, kb = 0) # for PCB 4, need to add kb value
   
   # Solve ODE
-  out <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms)
+  out <- ode(y = cinit, times = t.1, func = rtm.PCB4, parms = parms) # Need to change the func to the specific PCB (rtm.PCB4 or rtm.PCB19)
   out <- as.data.frame(out)
   colnames(out) <- c("time", "Cs", "Cw", "Cf", "Ca", "Cpuf")
   
@@ -79,6 +81,7 @@ options(scipen = 999)
 
 # Optimized parameters
 optimized_params <- result$par
+# Print optimized parameters
 print(optimized_params)
 
 # Reset scipen option to default
