@@ -28,9 +28,7 @@ ORCID: 0000-0002-0572-1494
 Principal Investigator: Timothy Mattes, PhD
 Principal Investigator email: tim-mattes@uiowa.edu
 
-Date of Data Collection:
-
-This work was supported by the National Institutes of Environmental Health Sciences (NIEHS) grant #P42ES013661.  The funding sponsor did not have any role in study design; in collection, analysis, and/or interpretation of data; in creation of the dataset; and/or in the decision to submit this data for publication or deposit it in a repository.
+This work was supported by the National Institutes of Environmental Health Sciences (NIEHS) grant #P42ES013661.  The funding sponsor did not have any role in study design; in collection, analysis, and/or interpretation of data; in creation of the dataset; and/or in the decision to submit this data for publication or deposit it in a repository. This R project is part of the paper: Ramotowski D, Martinez A, Marek RF, Hornbuckle KC and Mattes TE (2025) Paraburkholderia xenovorans strain LB400 Significantly Decreased Volatilization of Polychlorinated Biphenyls (PCBs) from Freshwater and Saline Sediments. ES&T Water
 
 Subject: Polychlorinated Biphenyls; Contaminant fate and transport; Paraburkholderia xenovorans LB400; Kinetic phase passive sampling; Bioremediation; Biodegradation; Biosurfactants; Bioavailability; GC-MS/MS
 
